@@ -1,0 +1,40 @@
+{
+  "name": "realtimechat_project",
+  "version": "1.0.0",
+  "description": "Project for developing a realtime chat app (only backend).",
+  "main": "./dist/app.js",
+  "scripts": {
+    "build-tsc": "tsc -w",
+    "run-watch": "nodemon ./dist",
+    "dev": "concurrently \"npm run build-tsc\"  \"npm run run-watch\"",
+    "test": "tsc && jest"
+  },
+  "author": "Sarah Zughyer",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/preset-env": "^7.22.20",
+    "@types/bcrypt": "^5.0.0",
+    "@types/cookie-parser": "^1.4.4",
+    "@types/express": "^4.17.18",
+    "@types/jest": "^29.5.5",
+    "@types/jsonwebtoken": "^9.0.3",
+    "@types/multer": "^1.4.8",
+    "@types/node": "^20.8.0",
+    "concurrently": "^8.2.1",
+    "nodemon": "^3.0.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@types/morgan": "^1.9.6",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jest": "^29.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql": "^2.18.1",
+    "typeorm": "^0.3.17"
+  }
+}

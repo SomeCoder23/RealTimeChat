@@ -1,10 +1,11 @@
 import { BaseEntity, Column, Entity, CreateDateColumn, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToMany, JoinTable } from "typeorm";
 import { Profile } from "./Profile.js";
+import { Chat } from "./Chat.js";
 
 @Entity()
 export class User extends BaseEntity{
-    @PrimaryGeneratedColumn('increment')
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
     
     @Column({length: 50, nullable: false})
     userName: string;
@@ -18,9 +19,13 @@ export class User extends BaseEntity{
       })
       createdAt: Date;
 
-    // @OneToOne(() => Profile, { cascade: true, eager: true })
-    // @JoinColumn()
-    // profile: Profile;
+    @OneToOne(() => Profile, { cascade: true, eager: true })
+    @JoinColumn()
+    profile: Profile;
+
+    @ManyToMany(() => Chat, { cascade: true, eager: true })
+    @JoinTable()
+    chats: Chat[];
 
  
 }

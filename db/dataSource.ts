@@ -11,7 +11,7 @@ const dataSource = new DataSource({
   username: 'root',
   password: '',
   database: 'chatapp',
-  entities: [Chat, Message, User, Profile],
+  entities: [User, Chat, Message, Profile],
   synchronize: true,
   logging: true
 });

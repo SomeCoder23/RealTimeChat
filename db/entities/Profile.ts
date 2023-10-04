@@ -3,7 +3,7 @@ import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, JoinColumn, Pr
 @Entity()
 export class Profile extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
-  id: string;
+  id: number;
 
   @Column({ length: 255, nullable: false })
   fullName: string;

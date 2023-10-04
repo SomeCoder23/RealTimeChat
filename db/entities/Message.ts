@@ -1,9 +1,11 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "./User.js";
+import { Chat } from "./Chat.js";
 
 @Entity()
 export class Message extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
-  id: string;
+  id: number;
 
   @Column({ length: 255, nullable: false })
   content: string;
@@ -22,15 +24,11 @@ export class Message extends BaseEntity {
   })
   timeSent: Date;
 
+  @ManyToOne(() => User)
+  sender: string;
 
-//   @Column()
-//   sender: User;
-
-//   @Column()
-//   reciever: User;
-
-  @Column({nullable: false})
-  chatID: number;
+  @ManyToOne(() => Chat, chat => chat.messages)
+  chat_id: number;
 
 
 }

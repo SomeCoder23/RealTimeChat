@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "Project for developing a realtime chat app (only backend).",
   "main": "./dist/app.js",
+  "type": "module",
   "scripts": {
     "build-tsc": "tsc -w",
-    "run-watch": "nodemon ./dist",
-    "dev": "concurrently \"npm run build-tsc\"  \"npm run run-watch\"",
+    "run-watch": "nodemon ./dist/app.js",
+    "dev": "concurrently \"npm:build-tsc\"  \"npm:run-watch\"",
     "test": "tsc && jest"
   },
   "author": "Sarah Zughyer",
@@ -20,6 +21,7 @@
     "@types/jsonwebtoken": "^9.0.3",
     "@types/multer": "^1.4.8",
     "@types/node": "^20.8.0",
+    "@types/validator": "^13.11.2",
     "concurrently": "^8.2.1",
     "nodemon": "^3.0.1",
     "typescript": "^5.2.2"

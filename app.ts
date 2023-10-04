@@ -9,6 +9,6 @@ app.listen(PORT, () => {
     console.log(`App is listening on port ${PORT}`);
     db.initialize();
   });
-
 //app.use
+
   export default app;

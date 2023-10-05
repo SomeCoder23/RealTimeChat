@@ -23,6 +23,7 @@ router.post('/register', (req, res)  => {
 
 })
 
+//the get profile endpoints also display the status of the user (online/offline), should there be a separate endpoint for the status???
 router.get('/profile', (req, res) =>{
 
     //gets the currently logged in user's profile

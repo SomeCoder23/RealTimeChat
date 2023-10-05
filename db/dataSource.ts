@@ -3,6 +3,7 @@ import { User } from "./entities/User.js";
 import { Profile } from "./entities/Profile.js";
 import { Chat } from "./entities/Chat.js";
 import { Message } from "./entities/Message.js";
+import { Contacts } from "./entities/Contacts.js";
 
 const dataSource = new DataSource({
   type: 'mysql',
@@ -11,7 +12,7 @@ const dataSource = new DataSource({
   username: 'root',
   password: '',
   database: 'chatapp',
-  entities: [User, Chat, Message, Profile],
+  entities: [User, Chat, Message, Profile, Contacts],
   synchronize: true,
   logging: true
 });

@@ -43,6 +43,12 @@ router.get('/search', (req, res) =>{
 
 });     
 
+router.get('/groupInfo/:chatID', (req, res) =>{
+
+  //gets info of the specified group: name, description, participants...etc
+
+});
+
 router.post('/start_chat/:userID', (req, res) =>{
 
     //starts a one-to-one chat with a specific user
@@ -95,6 +101,11 @@ router.post('/leave_chat/:chatId', (req, res) =>{
   //enables user to leave the specified chat [ has to be a group chat?? ]
 });
 
+router.delete('/delete_message/:messageID', (req, res) =>{
+
+  //deletes the specified message from a chat
+
+});
 
 
 router.delete('/delete_chat/:chatId', (req, res) =>{

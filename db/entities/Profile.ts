@@ -20,9 +20,9 @@ export class Profile extends BaseEntity {
   @Column({
     nullable: false, 
     type: 'enum', 
-    enum: ['Online', 'Offline'], 
-    default: 'Offline'
+    enum: ['online', 'offline'], 
+    default: 'offline'
   })
-  status: "Online" | "Offline";
+  status: "online" | "offline";
 
 }

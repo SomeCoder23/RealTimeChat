@@ -13,31 +13,58 @@ var router = express.Router();
 
 
 
-router.post('/login', loginUser=>{
+router.post('/login', (req, res) =>{
 
 });  
-router.post('/logout', logoutUser=>{
+router.post('/logout', (req, res) =>{
 
 });
-router.post('/register', createUser => {
+router.post('/register', (req, res)  => {
 
 })
-router.get('/profile/:userId', getUserProfile=>{
+
+router.get('/profile', (req, res) =>{
+
+    //gets the currently logged in user's profile
+});
+
+router.get('/profile/:userId', (req, res) =>{
 
 }); 
-router.put('/profile/:userId', updateUserProfile=>{
+
+
+router.put('/profile', (req, res) =>{
+
+    //updates currently logged in user's profile
+    //all new info specified in the body
+}); 
+
+
+router.put('/change_password', (req, res) =>{
+
+  //change users password
+  //user should enter old password and new password in the body
+
+});   
+
+ //should this be PUT ???
+router.post('/change_friend_status', (req, res) =>{
+
+  //change the relationship status with the user specified in the body
+  //user can MUTE, BLOCK other users 
 
 }); 
-router.delete('/user/remove/:id', deleteUserById=>{
+
+
+router.delete('/deleteAccount', (req, res) =>{
+
+  //delete user
 
 });
 
-router.put('/change-password', changePassword=>{
- }); 
- 
-// router.post('/forgotpassword', forgotPassword=>{
+// router.post('/forgotpassword', (req, res) =>{
 //     });
-//  router.post('/resetpassword', resetPassword=>{
+//  router.post('/resetpassword', (req, res) =>{
 //         });
 
 

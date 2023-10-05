@@ -1,26 +1,27 @@
+import { ChatTypes } from "../@types/types.js";
 
-const createChat = async (req:any, res:any) => {
+const createChat = async (payload: ChatTypes.Chat) => {
    
   };
   
-  const getChatMessages = async (req:any, res:any) => {
+  const getChatMessages = async () => {
    
   };
   
-  const sendMessage = async (req:any, res:any)=> {
+  const sendMessage = async (payload: ChatTypes.Message)=> {
     
   };
   
   
-  const changeFriendStatus = async (req:any, res:any) => {
+const changeFriendStatus = async () => {
 
 };
   
-const createGroup = async (req:any, res:any) => {
+// const createGroup = async (payload: ChatTypes.Chat) => {
  
-};
+// };
 
-const sendAttachment = async (req:any, res:any)=> {
+const sendAttachment = async ()=> {
 
 };
 
@@ -29,6 +30,6 @@ export {
   getChatMessages,
   sendMessage,
   changeFriendStatus,
-  createGroup,
+  //createGroup,
   sendAttachment
 };

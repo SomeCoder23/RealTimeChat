@@ -12,18 +12,38 @@ import {
 var router = express.Router();
 
 
+//POST ROUTES
 
 router.post('/login', (req, res) =>{
 
-});  
+});
+
 router.post('/logout', (req, res) =>{
 
 });
+
 router.post('/register', (req, res)  => {
 
 })
 
-//the get profile endpoints also display the status of the user (online/offline), should there be a separate endpoint for the status???
+//should this be PUT ???
+router.post('/change_relationship', (req, res) =>{
+  
+  //change the relationship status with the user specified in the body
+  //user can MUTE, BLOCK other users 
+  
+}); 
+
+
+//GET ROUTES
+
+router.get('/status/:id', (req, res) =>{
+
+  //gets the presence status of the specified user 
+
+});
+
+//the get profile endpoints also display the status of the user (online/offline)
 router.get('/profile', (req, res) =>{
 
     //gets the currently logged in user's profile
@@ -33,6 +53,8 @@ router.get('/profile/:userId', (req, res) =>{
 
 }); 
 
+
+//PUT ROUTES
 
 router.put('/profile', (req, res) =>{
 
@@ -48,14 +70,8 @@ router.put('/change_password', (req, res) =>{
 
 });   
 
- //should this be PUT ???
-router.post('/change_friend_status', (req, res) =>{
 
-  //change the relationship status with the user specified in the body
-  //user can MUTE, BLOCK other users 
-
-}); 
-
+//DELETE ROUTES
 
 router.delete('/deleteAccount', (req, res) =>{
 

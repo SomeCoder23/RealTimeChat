@@ -10,11 +10,7 @@ import {
   
 var router = express.Router();
 
-
-router.get('/messages/:chatId', (req, res) =>{
-
-}); 
-
+//POST ROUTES
 
 router.post('/sendMessage/:chatId', (req, res)=>{
 
@@ -28,26 +24,12 @@ router.post('/sendAttachment/:chatId', (req, res) =>{
 
 }); 
 
-
 router.post('/create_group', (req, res) =>{
 
   //creates new group, specifies participents, name, description(optional) in the body
   //user who creates the group is the only admin (only they can delete the group)
 
 });                
-
-
-router.get('/search', (req, res) =>{
-
-  //searches a specific chat for the text specified in the body
-
-});     
-
-router.get('/groupInfo/:chatID', (req, res) =>{
-
-  //gets info of the specified group: name, description, participants...etc
-
-});
 
 router.post('/start_chat/:userID', (req, res) =>{
 
@@ -78,6 +60,25 @@ router.post('/clear_chat/:chatID', (req, res) =>{
 
 });    
 
+router.post('/leave_chat/:chatId', (req, res) =>{
+
+  //enables user to leave the specified chat [ has to be a group chat?? ]
+});
+
+//GET ROUTES
+
+router.get('/search', (req, res) =>{
+
+  //searches a specific chat for the text specified in the body
+
+});     
+
+router.get('/groupInfo/:chatID', (req, res) =>{
+
+  //gets info of the specified group: name, description, participants...etc
+
+});
+
 router.get('/conversations', (req, res) =>{
 
   //view all conversations for the user
@@ -90,16 +91,13 @@ router.get('/enter_chat/:chatId', (req, res) =>{
 
 });    
 
-router.get('/chat_history/:chatId', (req, res) =>{
+router.get('/history/:chatId', (req, res) =>{
 
   //displays all chat history for the specified chat
 
 }); 
 
-router.post('/leave_chat/:chatId', (req, res) =>{
-
-  //enables user to leave the specified chat [ has to be a group chat?? ]
-});
+//DELETE ROUTES
 
 router.delete('/delete_message/:messageID', (req, res) =>{
 

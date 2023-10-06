@@ -3,6 +3,7 @@ import db from '../db/dataSource.js';
 import { Profile } from "../db/entities/Profile.js";
 import { User } from "../db/entities/User.js";
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const createUser = async (payload: ChatTypes.User) => {
   return db.dataSource.manager.transaction(async transaction => {
@@ -45,14 +46,40 @@ const getUserProfile = async (userID: string) => {};
 const updateUserProfile = async (userID: string, profile: ChatTypes.Profile) => {};
 
 
-const login = async (username: string, password: string) => {
+const login = async (userName: string, password: string) => {
   
     // Implement logic for user login using AWS Cognito or the authentication method 
+    try {
+      const user = await User.findOneBy({
+        userName
+      });
+  
+      const passwordMatching = await bcrypt.compare(password, user?.password || '');
+  
+      if (user && passwordMatching) {
+        const token = jwt.sign(
+          {
+            id: user.id,
+            userName: user.userName
+          },
+          process.env.SECRET_KEY || '',
+          {
+            expiresIn: "30m"
+          }
+        );
+  
+        return { token, fullName: user.profile.fullName };
+      } else {
+        throw ("Invalid Username or password!");
+      }
+    } catch (error) {
+      throw ("Invalid Username or password!");
+    }
 };
 
 
-const logout = async (userID: string) => {
-};
+// const logout = async (userID: string) => {
+// };
 
 
 const changePassword = async (oldPassword: string, newPassword: string) => {
@@ -70,7 +97,7 @@ export {
   getUserProfile,
   updateUserProfile,
   login,
-  logout,
+  //logout,
   changePassword,
   deleteUserAccount,
 };

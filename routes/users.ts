@@ -4,34 +4,60 @@ import {
     getUserProfile,
     updateUserProfile,
     login,
-    logout,
+    //logout,
     changePassword,
     deleteUserAccount,
   } from '../controllers/user.js';
-
 import {validateUser, validateLogin} from '../middleware/validation/user.js';
 import { authenticate } from '../middleware/auth/authenticate.js';
 
 var router = express.Router();
 
-
 //POST ROUTES
 
-router.post('/login', validateLogin, (req, res) =>{
+router.post('/login', validateLogin, (req, res, next) =>{
   const username = req.body.username;
   const password = req.body.password;
 
   login(username, password)
     .then(data => {
-      res.send(data);
+      res.cookie('fullName', data.fullName, {
+        maxAge: 60 * 60 * 1000
+      });
+      res.cookie('loginTime', Date.now(), {
+        maxAge: 60 * 60 * 1000
+      });
+      res.cookie('token', data.token, {
+        maxAge: 60 * 60 * 1000
+      });
+
+      res.send("Successfully logged in! :)");
     })
     .catch(err => {
-      res.status(401).send(err);
+      res.send("Something went wrong :(");
+      console.log("ERROR: " + err);
+      // next({
+      //   code: "INVALID_CREDENTIALS",
+      //   message: err
+      // });
     })
 
 });
 
 router.post('/logout', (req, res) =>{
+
+  res.cookie('fullName', '', {
+    maxAge: -1,  // This means the cookie will be deleted
+    expires: new Date(Date.now() - 1000)
+  });
+  res.cookie('loginTime', '', {
+    maxAge: -1
+  });
+  res.cookie('token', '', {
+    maxAge: -1
+  });
+
+  res.send("Successfully logged out! :)");
 
 });
 
@@ -63,9 +89,10 @@ router.get('/status/:id', (req, res) =>{
 });
 
 //the get profile endpoints also display the status of the user (online/offline)
-router.get('/profile', (req, res) =>{
+router.get('/profile', authenticate, (req, res) =>{
 
     //gets the currently logged in user's profile
+    res.send("Welcome! :)");
 });
 
 router.get('/profile/:userId', (req, res) =>{

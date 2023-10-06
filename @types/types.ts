@@ -16,8 +16,9 @@ export namespace ChatTypes {
         id: string;
         userName: string;
         password: string;
-        createdAt: Date;
-        profile: number;
+        fullName: string;
+        birthday: Date;
+        bio: string;
         chats: number[];
     }
 

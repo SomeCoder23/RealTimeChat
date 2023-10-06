@@ -20,8 +20,8 @@ export class Contacts extends BaseEntity {
     relationshipStatus: 'blocked' | 'muted' | 'normal';
 
     @CreateDateColumn({
-        type: 'timestamp',
-        default: () => "CURRENT_TIMESTAMP()"
+        type: 'timestamp'/*,
+        default: () => "CURRENT_TIMESTAMP()"*/
     })
     createdAt: Date;
 

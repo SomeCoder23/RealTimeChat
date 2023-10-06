@@ -3,18 +3,31 @@ import {
     createUser,
     getUserProfile,
     updateUserProfile,
-    loginUser,
-    logoutUser,
+    login,
+    logout,
     changePassword,
     deleteUserAccount,
   } from '../controllers/user.js';
+
+import {validateUser, validateLogin} from '../middleware/validation/user.js';
+import { authenticate } from '../middleware/auth/authenticate.js';
 
 var router = express.Router();
 
 
 //POST ROUTES
 
-router.post('/login', (req, res) =>{
+router.post('/login', validateLogin, (req, res) =>{
+  const username = req.body.username;
+  const password = req.body.password;
+
+  login(username, password)
+    .then(data => {
+      res.send(data);
+    })
+    .catch(err => {
+      res.status(401).send(err);
+    })
 
 });
 
@@ -22,7 +35,13 @@ router.post('/logout', (req, res) =>{
 
 });
 
-router.post('/register', (req, res)  => {
+router.post('/register', validateUser ,(req, res)  => {
+  createUser(req.body).then(() => {
+    res.status(201).send("User successfully registered! :)");
+  }).catch(err => {
+    console.error(err);
+    res.status(500).send(err);
+  });
 
 })
 

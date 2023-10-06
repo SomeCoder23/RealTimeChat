@@ -18,10 +18,7 @@ export class Message extends BaseEntity {
   })
   type: "Text" | "Attachment";
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    default: () => "CURRENT_TIMESTAMP()"
-  })
+  @CreateDateColumn({ type: 'timestamp', /*default: () => 'CURRENT_TIMESTAMP',*/ nullable: false })
   timeSent: Date;
 
   @ManyToOne(() => User)

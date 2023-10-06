@@ -22,8 +22,8 @@ export class Chat extends BaseEntity {
   type: "1To1" | "group";
 
   @CreateDateColumn({
-    type: 'timestamp',
-    default: () => "CURRENT_TIMESTAMP()"
+    type: 'timestamp'/*,
+    default: () => "CURRENT_TIMESTAMP()"*/
   })
   createdAt: Date;
 

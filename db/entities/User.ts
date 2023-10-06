@@ -13,17 +13,17 @@ export class User extends BaseEntity{
     @Column({nullable: false})
     password: string;
 
-    @CreateDateColumn({
-        type: 'timestamp',
-        default: () => "CURRENT_TIMESTAMP()"
-      })
-      createdAt: Date;
+    @Column({
+      type: 'date'/*,
+      default: () => 'CURRENT_DATE',*/
+    })
+    createdAt: Date;
 
     @OneToOne(() => Profile, { cascade: true, eager: true })
     @JoinColumn()
     profile: Profile;
 
-    @ManyToMany(() => Chat, { cascade: true, eager: true })
+    @ManyToMany(() => Chat, { cascade: true, eager: true, nullable: true })
     @JoinTable()
     chats: Chat[];
 

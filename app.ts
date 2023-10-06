@@ -1,3 +1,4 @@
+import './config.js';
 import express from 'express';
 import db from './db/dataSource.js';
 import usersRouter from './routes/users.js';

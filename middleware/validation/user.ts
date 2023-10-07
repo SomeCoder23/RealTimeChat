@@ -24,16 +24,17 @@ const validateUser = (req: express.Request,
   if (user.password?.length < 6) {
     errorList.push('Password should contain at least 6 characters!');
   }
-
+  
   if (user.username?.length < 6) {
     errorList.push('Username should contain at least 6 characters!');
   }
-
+  
 //   if (!['employee', 'employer'].includes(user.type)) {
-//     errorList.push('User type unknown!');
-//   }
-
+  //     errorList.push('User type unknown!');
+  //   }
+  
   if (errorList.length) {
+    console.log("Something is wrong 2 :(");
     next({
       code: "INVALID_INPUT",
       message: errorList.join(', ')

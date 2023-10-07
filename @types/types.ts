@@ -14,7 +14,7 @@ export namespace ChatTypes {
 
     export interface User {
         id: string;
-        userName: string;
+        username: string;
         password: string;
         fullName: string;
         birthday: Date;

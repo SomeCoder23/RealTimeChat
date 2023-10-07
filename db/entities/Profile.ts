@@ -14,7 +14,7 @@ export class Profile extends BaseEntity {
   })
   birthday: Date;
 
-  @Column({ length: 255, nullable: false })
+  @Column({ length: 255, nullable: true, default: "Welcome to my profile :)" })
   bio: string;
 
   @Column({

@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../../db/entities/User.js';
 
+
 const authenticate = async (
   req: express.Request,
   res: express.Response,
@@ -15,7 +16,7 @@ const authenticate = async (
 
   if (tokenIsValid) {
     const decoded = jwt.decode(token, { json: true });
-    const user = await User.findOneBy({ userName: decoded?.username || '' })
+    const user = await User.findOneBy({ username: decoded?.username || '' })
     res.locals.user = user;
     next();
   } else {

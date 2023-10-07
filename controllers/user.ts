@@ -23,7 +23,7 @@ const createUser = async (payload: ChatTypes.User) => {
       const hashedPassword = await bcrypt.hash(payload.password, 10);
       const currentDate = new Date();
       const user = User.create({
-        userName: payload.userName,
+        username: payload.username,
         password: hashedPassword,
         createdAt: currentDate,
         profile: profile
@@ -32,6 +32,7 @@ const createUser = async (payload: ChatTypes.User) => {
       await transaction.save(user);
 
     } catch(error){
+      console.log("###ERROR: ");
       console.log(error);
       throw "Failed to register user.";
     }
@@ -40,18 +41,36 @@ const createUser = async (payload: ChatTypes.User) => {
 };
 
 
-const getUserProfile = async (userID: string) => {};
+const updateUserProfile = async (payload: ChatTypes.Profile, user: User) => {
 
+  return db.dataSource.manager.transaction(async transaction => {
+   
+    try
+    {
+      let profile = user.profile;
+      profile.fullName = payload.fullName !== undefined ? payload.fullName : profile.fullName;
+      profile.birthday = payload.birthday !== undefined ? payload.birthday : profile.birthday;
+      profile.bio = payload.bio !== undefined ? payload.bio : profile.bio;
+      
+      await transaction.save(profile);
+  
 
-const updateUserProfile = async (userID: string, profile: ChatTypes.Profile) => {};
+    } catch(error){
+      console.log("###ERROR: ");
+      console.log(error);
+      throw "Failed to update user profile.";
+    }
+   
+  });
 
+};
 
-const login = async (userName: string, password: string) => {
+const login = async (username: string, password: string) => {
   
     // Implement logic for user login using AWS Cognito or the authentication method 
     try {
       const user = await User.findOneBy({
-        userName
+        username
       });
   
       const passwordMatching = await bcrypt.compare(password, user?.password || '');
@@ -60,7 +79,7 @@ const login = async (userName: string, password: string) => {
         const token = jwt.sign(
           {
             id: user.id,
-            userName: user.userName
+            username: user.username
           },
           process.env.SECRET_KEY || '',
           {
@@ -78,26 +97,53 @@ const login = async (userName: string, password: string) => {
 };
 
 
-// const logout = async (userID: string) => {
-// };
-
-
-const changePassword = async (oldPassword: string, newPassword: string) => {
+const changePassword = async (passwords: any, user: User) => {
 
     //  using AWS Cognito or the authentication method
+    const passwordMatching = await bcrypt.compare(passwords.old, user?.password || '');
+    if(passwordMatching){
+      
+      if(passwords.new.length < 6)
+        throw new Error('Password should contain at least 6 characters!');
+
+      user.password = await bcrypt.hash(passwords.new, 10);
+      user.save().then((response) => {
+        return "User password updated!";
+      }).catch(error => {
+        console.error(error);
+        throw new Error('Something went wrong');
+      });
+    }
+    else throw new Error("Password incorrect");
 };
 
 
-const deleteUserAccount = async (userID: string) => {
+const deleteAccount = async (id: string) => {
     // Delete all data related with this account from DB/AWS S3 etc...
+    try {
+
+      const user = await User.findOneBy({ id });
+      if (user) {
+        await user.remove();
+        return "User Deleted!";
+       // res.send('User Deleted');
+      } else {
+        console.log("User not found");
+        throw("User not found :(");
+      }
+    } catch (error) {
+        console.log(error);
+        throw("Something went wrong, can't delete user account :(");
+    }
+    
 };
 
 export {
   createUser,
-  getUserProfile,
+  //getUserProfile,
   updateUserProfile,
   login,
   //logout,
   changePassword,
-  deleteUserAccount,
+  deleteAccount,
 };

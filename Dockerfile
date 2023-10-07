@@ -1,5 +1,5 @@
 
-FROM node:20-alpine
+FROM chatapp:latest
 
 WORKDIR /usr/app
 

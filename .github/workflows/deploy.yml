@@ -19,5 +19,5 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t raghaddrabee/nginx:latest .
-          docker push raghaddrabee/nginx:latest
+          docker build -t raghaddrabee/chatapp .
+          docker push raghaddrabee/chatapp

@@ -14,10 +14,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-          repository: somecoder23/chatapp-docker
-          tag_with_sha: true
+      - name: Build Docker image
+        run: docker build . -t somecoder23/chatapp-docker:${{ github.sha }}
+
+      - name: Login to Docker Hub
+        run: echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
+
+
+
+      - name: Push Docker image
+        run: docker push somecoder23/chatapp-docker:${{ github.sha }}

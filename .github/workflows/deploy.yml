@@ -14,10 +14,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build and push Docker image
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: somecoder23/chatapp-docker
-          tag_with_sha: true
+          context: .
+          load: true
+          tags: somecoder23/chatapp:latest

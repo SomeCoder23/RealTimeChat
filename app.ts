@@ -4,6 +4,7 @@ import db from './db/dataSource.js';
 import usersRouter from './routes/users.js';
 import chatRouter from './routes/chat.js';
 import cookieParser from 'cookie-parser';
+import dataSource from './db/dataSource.js';
 
 var app = express();
 const PORT = 5000;
@@ -24,6 +25,7 @@ app.get('/health', (req, res) =>{
 app.listen(PORT, () => {
     console.log(`App is listening on port ${PORT}`);
     db.initialize();
+    // initDB();
   });
 
   export default app;

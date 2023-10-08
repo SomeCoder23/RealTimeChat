@@ -4,7 +4,6 @@ import { Profile } from "./entities/Profile.js";
 import { Chat } from "./entities/Chat.js";
 import { Message } from "./entities/Message.js";
 import { Contacts } from "./entities/Contacts.js";
-import "dotenv/config";
 
 const dataSource = new DataSource({
   type: 'mysql',
@@ -15,7 +14,7 @@ const dataSource = new DataSource({
   database: process.env.DB_NAME,
   entities: [User, Chat, Message, Profile, Contacts],
   synchronize: true,
-  //logging: true
+  logging: true
 });
 
 
@@ -27,4 +26,4 @@ await dataSource.initialize().then(() => {
 
 });
 
-export default { initialize, dataSource};
+export default {initialize, dataSource};

@@ -1,0 +1,7 @@
+version: '3'
+services:
+  web:
+    image: somecoder23/chatapp-docker:latest
+    restart: always
+    ports:
+      - "80:80"

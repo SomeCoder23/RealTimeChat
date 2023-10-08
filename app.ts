@@ -25,7 +25,7 @@ app.get('/health', (req, res) =>{
 app.listen(PORT, () => {
     console.log(`App is listening on port ${PORT}`);
     db.initialize();
-    // initDB();
+  
   });
 
   export default app;

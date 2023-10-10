@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, ManyToMany } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, ManyToMany, JoinTable } from "typeorm";
 import { User } from "./User.js";
 import { Message } from "./Message.js";
 
@@ -27,7 +27,8 @@ export class Chat extends BaseEntity {
   })
   createdAt: Date;
 
-  @ManyToMany(() => User, user => user.chats)
+  @ManyToMany(() => User, { cascade: true, eager: true})
+  @JoinTable()
   participants: User[];
 
   @OneToMany(() => Message, messages => messages.chat_id)

@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticate } from '../middleware/auth/authenticate.js';
 import {
     createChat,
     getChatMessages,
@@ -33,12 +34,13 @@ var router = express.Router();
   
 // }); 
 
-router.post('/sendMessage/:chatId', (req, res)=>{
+router.post('/sendMessage/:chatId', authenticate, (req, res)=>{
 
   //send text message to the specifies chat
   const chat = Number(req.params.chatId);
   const user = res.locals.user;
-  sendMessage(req.body, chat, res.locals.user).then(() => {
+  console.log("USER: " + user.profile.fullName + " ID: " + user.id);
+  sendMessage(req.body, chat, user.id).then(() => {
     res.status(201).send("Message sent!");
   }).catch(err => {
     console.log("***ERROR: ");
@@ -48,13 +50,13 @@ router.post('/sendMessage/:chatId', (req, res)=>{
   
 }); 
 
-router.post('/sendAttachment/:chatId', (req, res) =>{
+router.post('/sendAttachment/:chatId', authenticate, (req, res) =>{
   
   //send attachment (file/ image) to the specifies chat
 
 }); 
 
-router.post('/create_group', (req, res) =>{
+router.post('/create_group', authenticate, (req, res) =>{
 
   //creates new group, specifies participents, name, description(optional) in the body
   //user who creates the group is the only admin (only they can delete the group)
@@ -69,7 +71,7 @@ router.post('/create_group', (req, res) =>{
 
 });                
 
-router.post('/start_chat/:username', (req, res) =>{
+router.post('/start_chat/:username', authenticate, (req, res) =>{
 
   //const username = req.params.username;
   createChat(req.params, "u", res.locals.user).then(() => {
@@ -142,13 +144,13 @@ router.get('/search', (req, res) =>{
 
 });     
 
-router.get('/groupInfo/:chatID', (req, res) =>{
+router.get('/groupInfo/:chatID', authenticate, (req, res) =>{
 
   //gets info of the specified group: name, description, participants...etc
 
 });
 
-router.get('/conversations', (req, res) =>{
+router.get('/conversations', authenticate, (req, res) =>{
 
   //view all conversations for the user
   getChats(res.locals.user).then((data) => {
@@ -161,11 +163,22 @@ router.get('/conversations', (req, res) =>{
 
 });          
 
-router.get('/enter_chat/:chatId', (req, res) =>{
+router.get('/enter_chat/:chatId', authenticate, async (req, res) =>{
 
   //enter a specific chat with the chat id specified, displays all recent [or should it be ALL??] messages.
-  getChatMessages(Number(req.params.chatId), res.locals.user).then((data) => {
-    res.status(201).send(data);
+  getChatMessages(Number(req.params.chatId), res.locals.user)
+  .then((data) => {
+    console.log(data);
+    try{
+      let messages: any = [];
+      data.forEach(message => {
+        messages.push(message.content);
+      })
+      res.status(201).send(messages);
+    }catch(error){
+      console.log(error);
+      res.status(500).send("Something went wrong");
+    }
   }).catch(err => {
     console.log("***ERROR: ");
     console.error(err);

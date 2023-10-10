@@ -84,14 +84,17 @@ const getChatMessages = async (id: number, user: User) => {
   //returns messages if user is a participant of chat room
   const chat = await Chat.findOneBy({id});
   if(chat){
-    if(chat.participants.includes(user))
-      return chat.messages;
-    else throw new Error("Chat not found");
+    for (const participant of chat.participants){
+      if(participant.id == user.id){
+        return chat.messages;
+      }
+    } 
+    throw new Error("Chat not found");
   }else throw new Error("Chat not found");
   
 };
 
-const sendMessage = async (message: Message, chatID: number, user: User)=> {
+const sendMessage = async (message: Message, chatID: number, user: string)=> {
 
   const currentTime = new Date(); 
   //const currentTime = new Date().getTime(); 
@@ -100,7 +103,7 @@ const sendMessage = async (message: Message, chatID: number, user: User)=> {
     timeSent: currentTime,
     chat_id: chatID,
     type: "text",
-    sender: user.id
+    sender: user
   }); 
   
     try{    

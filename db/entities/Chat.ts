@@ -31,7 +31,7 @@ export class Chat extends BaseEntity {
   @JoinTable()
   participants: User[];
 
-  @OneToMany(() => Message, messages => messages.chat_id)
+  @OneToMany(() => Message, messages => messages.chat_id, { cascade: true, eager: true, nullable: true})
   messages: Message[];
 
 

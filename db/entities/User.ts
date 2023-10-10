@@ -26,5 +26,4 @@ export class User extends BaseEntity{
     @ManyToMany(() => Chat, chat => chat.participants)
     chats: Chat[];
 
- 
 }

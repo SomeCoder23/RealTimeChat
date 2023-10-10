@@ -23,8 +23,7 @@ export class User extends BaseEntity{
     @JoinColumn()
     profile: Profile;
 
-    @ManyToMany(() => Chat, { cascade: true, eager: true, nullable: true })
-    @JoinTable()
+    @ManyToMany(() => Chat, chat => chat.participants)
     chats: Chat[];
 
  

@@ -13,10 +13,10 @@ export class Message extends BaseEntity {
   @Column({
     nullable: false, 
     type: 'enum', 
-    enum: ['Text', 'Attachment'], 
-    default: 'Text'
+    enum: ['text', 'attachment'], 
+    default: 'text'
   })
-  type: "Text" | "Attachment";
+  type: "text" | "attachment";
 
   @CreateDateColumn({ type: 'timestamp', /*default: () => 'CURRENT_TIMESTAMP',*/ nullable: false })
   timeSent: Date;

@@ -20,7 +20,6 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
-const chatRooms = new Map(); // Store chat rooms
 const users: string[] = [];
 
 
@@ -69,52 +68,6 @@ io.on('connection', (socket: Socket) => {
   });
 });
 
-// io.on('connection', (socket) => {
-//   console.log(`User Connected: ${socket.id}`);
-
-//   // Create a new chat room
-//   socket.on('create-room', (roomName) => {
-//     if (!chatRooms.has(roomName)) {
-//       socket.join(roomName);
-//       chatRooms.set(roomName, new Set());
-//       chatRooms.get(roomName).add(socket.id);
-//     }
-//   });
-
-//   // Join an existing chat room
-//   socket.on('join-room', (roomName) => {
-//     if (chatRooms.has(roomName)) {
-//       socket.join(roomName);
-//       chatRooms.get(roomName).add(socket.id);
-//     }
-//   });
-
-//   // Leave a chat room
-//   socket.on('leave-room', (roomName) => {
-//     if (chatRooms.has(roomName)) {
-//       socket.leave(roomName);
-//       chatRooms.get(roomName).delete(socket.id);
-//     }
-//   });
-
-//   socket.on('send-message', (roomName, msg) => {
-//     // Emit the message to everyone in the room
-//     if (chatRooms.has(roomName)) {
-//       io.to(roomName).emit('message', `${socket.id}: ${msg}`);
-//     }
-//   });
-
-//   socket.on('disconnect', () => {
-//     console.log("User disconnected");
-//     // Remove the user from all chat rooms
-//     chatRooms.forEach((participants, roomName) => {
-//       if (participants.has(socket.id)) {
-//         participants.delete(socket.id);
-//         io.to(roomName).emit('message', `User ${socket.id} left the room.`);
-//       }
-//     });
-//   });
-// });
 
 server.listen(PORT, () => {
   console.log("SERVER IS RUNNING");

@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import http from "http";
 import { Server } from "socket.io";
 import dataSource from './db/dataSource.js';
+import { authenticate } from './middleware/auth/authenticate.js';
 
 var app = express();
 const PORT = 5000;
@@ -16,7 +17,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 app.use('/users', usersRouter);
-app.use('/chat', chatRouter);
+app.use('/chat', authenticate, chatRouter);
 
 app.get('/', (req, res) =>{
   res.send("Welcome to the Real-Time Chat App!");

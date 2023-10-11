@@ -12,6 +12,7 @@ import {validateUser, validateLogin} from '../middleware/validation/user.js';
 import { authenticate } from '../middleware/auth/authenticate.js';
 import { User } from '../db/entities/User.js';
 import { In } from 'typeorm';
+import { changeFriendStatus } from '../controllers/chat.js';
 
 var router = express.Router();
 
@@ -194,6 +195,15 @@ router.put('/change_relationship', authenticate, (req, res) =>{
   //first checks if users are even connected
   //change the relationship status with the user specified in the body
   //user can MUTE, BLOCK other users 
+  const status = req.body.status;
+  const contact = req.body.username;
+  changeFriendStatus(res.locals.user, contact, status).then((data) => {
+    res.status(201).send(data);
+  }).catch(err => {
+    console.log("***ERROR: ");
+    console.error(err);
+    res.status(500).send(err);
+  });
   
 }); 
 

@@ -24,7 +24,7 @@ export class Message extends BaseEntity {
   @ManyToOne(() => User)
   sender: string;
 
-  @ManyToOne(() => Chat, chat => chat.messages)
+  @ManyToOne(() => Chat, chat => chat.messages, {nullable: true})
   chat_id: number;
 
 

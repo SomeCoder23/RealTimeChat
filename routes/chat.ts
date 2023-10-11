@@ -4,14 +4,14 @@ import {
     createChat,
     getChatMessages,
     sendMessage,
-    getChats,
+    clearChat,
     changeFriendStatus,
    // createGroup,
     sendAttachment
   } from '../controllers/chat.js';
-import { Message } from '../db/entities/Message.js';
-import { create } from 'domain';
 import { Chat } from '../db/entities/Chat.js';
+import db from '../db/dataSource.js';
+import { In } from 'typeorm';
   
 var router = express.Router();
 
@@ -34,7 +34,7 @@ var router = express.Router();
   
 // }); 
 
-router.post('/sendMessage/:chatId', authenticate, (req, res)=>{
+router.post('/sendMessage/:chatId', (req, res)=>{
 
   //send text message to the specifies chat
   const chat = Number(req.params.chatId);
@@ -50,13 +50,13 @@ router.post('/sendMessage/:chatId', authenticate, (req, res)=>{
   
 }); 
 
-router.post('/sendAttachment/:chatId', authenticate, (req, res) =>{
+router.post('/sendAttachment/:chatId', (req, res) =>{
   
   //send attachment (file/ image) to the specifies chat
 
 }); 
 
-router.post('/create_group', authenticate, (req, res) =>{
+router.post('/create_group', (req, res) =>{
 
   //creates new group, specifies participents, name, description(optional) in the body
   //user who creates the group is the only admin (only they can delete the group)
@@ -71,7 +71,7 @@ router.post('/create_group', authenticate, (req, res) =>{
 
 });                
 
-router.post('/start_chat/:username', authenticate, (req, res) =>{
+router.post('/start_chat/:username', (req, res) =>{
 
   //const username = req.params.username;
   createChat(req.params, "u", res.locals.user).then(() => {
@@ -102,10 +102,18 @@ router.post('/remove_participant', (req, res) =>{
 
 });  
 
-router.post('/clear_chat/:chatID', (req, res) =>{
+router.post('/clear_chat/:chatID', async (req, res) =>{
 
   //clears the specified chat
   //it should only clear it for the user who chose to clear the chat not the other participants but HOWWWW??
+  const id = Number(req.params.chatID);
+  clearChat(id, res.locals.user).then((data) => {
+    res.status(201).send(data);
+  }).catch(err => {
+    console.log("***ERROR: ");
+    console.error(err);
+    res.status(500).send(err);
+  });
 
 });    
 
@@ -116,6 +124,7 @@ router.post('/leave_chat/:chatId', (req, res) =>{
 
 //GET ROUTES
 
+//Only for TESTING
 router.get('/', async (req: any, res) => {
   try{
       const page = parseInt(req.query.page || '1');
@@ -144,26 +153,38 @@ router.get('/search', (req, res) =>{
 
 });     
 
-router.get('/groupInfo/:chatID', authenticate, (req, res) =>{
+router.get('/groupInfo/:chatID', (req, res) =>{
 
   //gets info of the specified group: name, description, participants...etc
 
 });
 
-router.get('/conversations', authenticate, (req, res) =>{
+router.get('/conversations', async (req: any, res) =>{
 
   //view all conversations for the user
-  getChats(res.locals.user).then((data) => {
-    res.status(201).send(data);
-  }).catch(err => {
-    console.log("***ERROR: ");
-    console.error(err);
-    res.status(500).send(err);
-  });
+  try{
+    const userId = res.locals.user.id;
+    const results = await db.dataSource.manager.query('SELECT chatId FROM chat_participants_user WHERE userId = ?', [userId]);
+    const chatIds = results.map((row : any) => row.chatId);
 
+    const chats = await Chat.find({
+      where: {
+        id: In(chatIds),
+      },
+    });
+    console.log(results);
+    console.log(chats);
+    res.send({
+      chats
+    });
+ // } else res.send("oops");
+  } catch(error){
+    console.error(error);
+    res.status(500).send("Something went wrong!!!!");
+  }
 });          
 
-router.get('/enter_chat/:chatId', authenticate, async (req, res) =>{
+router.get('/enter_chat/:chatId', async (req, res) =>{
 
   //enter a specific chat with the chat id specified, displays all recent [or should it be ALL??] messages.
   getChatMessages(Number(req.params.chatId), res.locals.user)
@@ -190,6 +211,24 @@ router.get('/enter_chat/:chatId', authenticate, async (req, res) =>{
 router.get('/history/:chatId', (req, res) =>{
 
   //displays all chat history for the specified chat
+  getChatMessages(Number(req.params.chatId), res.locals.user)
+  .then((data) => {
+    console.log(data);
+    try{
+      let messages: any = [];
+      data.forEach(message => {
+        messages.push(message.content);
+      })
+      res.status(201).send(messages);
+    }catch(error){
+      console.log(error);
+      res.status(500).send("Something went wrong");
+    }
+  }).catch(err => {
+    console.log("***ERROR: ");
+    console.error(err);
+    res.status(500).send(err);
+  });
 
 }); 
 

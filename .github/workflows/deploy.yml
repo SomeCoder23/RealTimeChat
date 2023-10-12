@@ -23,10 +23,10 @@ jobs:
       
       - name: Deploy Docker container
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker stop chatapp || true"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker rm chatapp || true"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker stop chatapp-docker || true"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker rm chatapp-docker || true"
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker pull somecoder23/chatapp:latest"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker run -d -p 80:80 --name chatapp somecoder23/chatapp:latest"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker run -d -p 80:80 --name chatapp-docker somecoder23/chatapp:latest"
 
       - name: Push to Docker Hub
         uses: docker/login-action@v1

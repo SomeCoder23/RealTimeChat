@@ -7,16 +7,13 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    container:
+      image: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-      - name: Setup Docker
-        uses: docker/setup-docker@v2
-        with:
-          docker-version: '24.0.6'
-
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup SSH connection
         run: |

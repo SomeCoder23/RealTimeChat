@@ -19,14 +19,14 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa 13.53.134.121 >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@13.53.134.121 "echo SSH connection established"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "echo SSH connection established"
       
       - name: Deploy Docker container
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@13.53.134.121 "docker stop your-container-name || true"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@13.53.134.121 "docker rm your-container-name || true"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@13.53.134.121 "docker pull somecoder23/chatapp:latest"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@13.53.134.121 "docker run -d -p 80:80 --name your-container-name somecoder23/chatapp:latest"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker stop chatapp || true"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker rm chatapp || true"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker pull somecoder23/chatapp:latest"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.53.134.121 "docker run -d -p 80:80 --name chatapp somecoder23/chatapp:latest"
 
       - name: Push to Docker Hub
         uses: docker/login-action@v1

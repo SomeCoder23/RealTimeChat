@@ -27,15 +27,15 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: somecoder23/RealTimeChat:latest
+          tags: somecoder23/realtimechat:latest
      
   deploy:
     needs: build
     runs-on: [aws-ec2]
     steps:
       - name: Pull image from docker hub
-        run: docker pull somecoder23/RealTimeChat:latest
+        run: docker pull somecoder23/realtimechat:latest
       - name: Delete old container
-        run: docker rm -f RealTimeChat-container
+        run: docker rm -f realtimechat-container
       - name: Run docker container
-        run: docker run -d -p 5000:5000 --name RealTimeChat-container somecoder23/RealTimeChat
+        run: docker run -d -p 5000:5000 --name realtimechat-container somecoder23/RealTimeChat

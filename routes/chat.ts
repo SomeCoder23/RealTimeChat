@@ -5,13 +5,19 @@ import {
     getChatMessages,
     sendMessage,
     clearChat,
-    changeFriendStatus,
-   // createGroup,
-    sendAttachment
+    sendAttachment,
+    getGroupInfo,
+    leaveRoom,
+    getChats,
+    addParticipant,
+    removeParticipant,
+    deleteMessage
   } from '../controllers/chat.js';
 import { Chat } from '../db/entities/Chat.js';
 import db from '../db/dataSource.js';
 import { In } from 'typeorm';
+
+
   
 var router = express.Router();
 
@@ -40,7 +46,7 @@ router.post('/sendMessage/:chatId', (req, res)=>{
   const chat = Number(req.params.chatId);
   const user = res.locals.user;
   console.log("USER: " + user.profile.fullName + " ID: " + user.id);
-  sendMessage(req.body, chat, user.id).then(() => {
+  sendMessage(req.body, chat, user).then(() => {
     res.status(201).send("Message sent!");
   }).catch(err => {
     console.log("***ERROR: ");
@@ -91,6 +97,17 @@ router.post('/add_participant', (req, res) =>{
   //adds a participent to a group chat
   //userId and chatID specified in the body
   //?? SHould the ADMIN only be able to add participents??
+  try{ 
+    addParticipant(req.body.chatID, res.locals.user, req.body.userID).then(() => {
+    res.status(201).send("Chat created!");
+  }).catch(err => {
+    console.log("***ERROR: ");
+    console.error(err);
+    res.status(500).send(err);
+  });} catch(error){
+    console.log(error);
+    res.status(500).send("Failure");
+  }
 
 });         
 
@@ -99,6 +116,17 @@ router.post('/remove_participant', (req, res) =>{
   //removes a participent to a group chat
   //userId and chatID specified in the body
   //?? SHould the ADMIN only be able to delete participents??
+  try{ 
+    removeParticipant(req.body.chatID, res.locals.user, req.body.userID).then(() => {
+    res.status(201).send("Chat created!");
+  }).catch(err => {
+    console.log("***ERROR: ");
+    console.error(err);
+    res.status(500).send(err);
+  });} catch(error){
+    console.log(error);
+    res.status(500).send("Failure");
+  }
 
 });  
 
@@ -120,6 +148,29 @@ router.post('/clear_chat/:chatID', async (req, res) =>{
 router.post('/leave_chat/:chatId', (req, res) =>{
 
   //enables user to leave the specified chat [ has to be a group chat?? ]
+  try{ 
+    removeParticipant(Number(req.params.chatId), res.locals.user, res.locals.user).then(() => {
+    res.status(201).send("Chat created!");
+  }).catch(err => {
+    console.log("***ERROR: ");
+    console.error(err);
+    res.status(500).send(err);
+  });} catch(error){
+    console.log(error);
+    res.status(500).send("Failure");
+  }
+});
+
+//done
+router.post('/leave', (req, res) =>{
+    getChats(res.locals.user).then(data => {
+      res.status(200).send(data);
+    })
+    .catch(error => {
+      console.error(error);
+      res.status(500).send("Something went wrong!!!!");
+    });
+    
 });
 
 //GET ROUTES
@@ -156,32 +207,28 @@ router.get('/search', (req, res) =>{
 router.get('/groupInfo/:chatID', (req, res) =>{
 
   //gets info of the specified group: name, description, participants...etc
+  const id = Number(req.params.chatID);
+  getGroupInfo(id, res.locals.user).then( data => {
+    res.status(200).send(data);
+  })
+  .catch(error => {
+    console.log(error);
+    res.status(500).send("Failed to display group info.");
+  })
+
 
 });
 
 router.get('/conversations', async (req: any, res) =>{
 
   //view all conversations for the user
-  try{
-    const userId = res.locals.user.id;
-    const results = await db.dataSource.manager.query('SELECT chatId FROM chat_participants_user WHERE userId = ?', [userId]);
-    const chatIds = results.map((row : any) => row.chatId);
-
-    const chats = await Chat.find({
-      where: {
-        id: In(chatIds),
-      },
-    });
-    console.log(results);
-    console.log(chats);
-    res.send({
-      chats
-    });
- // } else res.send("oops");
-  } catch(error){
+  getChats(res.locals.user).then(data => {
+    res.status(200).send(data);
+  })
+  .catch(error => {
     console.error(error);
     res.status(500).send("Something went wrong!!!!");
-  }
+  });
 });          
 
 router.get('/enter_chat/:chatId', async (req, res) =>{
@@ -237,6 +284,13 @@ router.get('/history/:chatId', (req, res) =>{
 router.delete('/delete_message/:messageID', (req, res) =>{
 
   //deletes the specified message from a chat
+  deleteMessage(Number(req.params.messageID), res.locals.user).then((data) => {
+  res.status(201).send(data);
+  }).catch(err => {
+    console.log("***ERROR: ");
+    console.error(err);
+    res.status(500).send(err);
+  });
 
 });
 

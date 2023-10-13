@@ -5,14 +5,17 @@ import usersRouter from './routes/users.js';
 import chatRouter from './routes/chat.js';
 import cookieParser from 'cookie-parser';
 import http from "http";
+import cors from 'cors';
 import { Server, Socket } from "socket.io";
 import dataSource from './db/dataSource.js';
 import { authenticate } from './middleware/auth/authenticate.js';
 
 var app = express();
+app.use(express.static('client'));
 const PORT = 5000;
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -37,8 +40,8 @@ app.get('/health', (req, res) =>{
 
 io.on('connection', (socket: Socket) => {
   console.log('connected to', socket.id);
-  const room: string = 'MYROOM';
 
+  //done
   socket.on("adduser", (username: string) => {
     socket.data.user = username;
     users.push(username);
@@ -46,11 +49,25 @@ io.on('connection', (socket: Socket) => {
     io.sockets.emit("users", users);
   });
 
+  //done
   socket.on("message", (message: string) => {
     io.sockets.emit("message", {
       user: socket.data.user,
       message: message,
     });
+  });
+
+  // done
+  socket.on('joinRoom', (room) => {
+    socket.join(room);
+    socket.data.room = room;
+    console.log(`Socket joined room: ${room}`);
+    io.sockets.emit("joinedRoom", room);
+  });
+
+  socket.on('leaveRoom', () => {
+    socket.leave(socket.data.room);
+    console.log(`Socket left room: ${socket.data.room}`);
   });
 
   socket.on("disconnect", () => {

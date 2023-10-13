@@ -4,6 +4,7 @@ import { Profile } from "../db/entities/Profile.js";
 import { User } from "../db/entities/User.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import {socket} from './chat.js'
 
 const createUser = async (payload: ChatTypes.User) => {
   return db.dataSource.manager.transaction(async transaction => {
@@ -18,7 +19,7 @@ const createUser = async (payload: ChatTypes.User) => {
       });
       
       await transaction.save(profile);
-      
+      console.log("Saved Profile!");
       //Second: Hashes password, creates new user and saves it.
       const hashedPassword = await bcrypt.hash(payload.password, 10);
       const currentDate = new Date();
@@ -86,8 +87,12 @@ const login = async (username: string, password: string) => {
             expiresIn: "30m"
           }
         );
-  
+        
+        //change presences status of user.
+        //user.profile.status = "online";
+       // await user.save();
         return { token, fullName: user.profile.fullName };
+        
       } else {
         throw ("Invalid Username or password!");
       }
@@ -118,6 +123,7 @@ const changePassword = async (passwords: any, user: User) => {
 };
 
 
+//deletes user but still needs to deal with user's chats
 const deleteAccount = async (id: string) => {
     // Delete all data related with this account from DB/AWS S3 etc...
     try {
@@ -140,7 +146,6 @@ const deleteAccount = async (id: string) => {
 
 export {
   createUser,
-  //getUserProfile,
   updateUserProfile,
   login,
   //logout,

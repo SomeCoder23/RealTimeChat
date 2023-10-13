@@ -5,13 +5,16 @@ const chatboxinput = document.querySelector(".chatbox input")
 const useraddform = document.querySelector(".modal")
 const backdrop = document.querySelector(".backdrop")
 const useraddinput = document.querySelector(".modal input");
-const socket = io("http://localhost:5000");
-
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+const title = document.getElementById("title");
+const URL = 'http://localhost:5000';
+const socket = io(URL);
 
 
 let users = [];
 let messages = []
-
+let room;
 
 console.log(messageList);
 
@@ -56,9 +59,34 @@ function messageSubmitHandler(e) {
 
     let message = chatboxinput.value;
 
-    socket.emit("message", message)
+    fetch(`${URL}/chat/sendMessage`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({content: message}),
+    })
+    .then(response => {
+        console.log("RESPONSE:");
+        console.log(response);
+        if (!response.ok) {
+            return alert("Failed to send Message :(");
+        } 
 
-    chatboxinput.value = ""
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        if (data.success){
+            socket.emit("message", message)
+            chatboxinput.value = ""
+            return;
+        }
+        else return alert("Failed to send Message :(");
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 
 
 }
@@ -66,16 +94,44 @@ function messageSubmitHandler(e) {
 function userAddHandler(e) {
     e.preventDefault();
 
-    let username = useraddinput.value;
+    e.preventDefault();
+    console.log("LOGIN BUTTON CLICKED!");
+    let username = usernameInput.value;
+    let password = passwordInput.value;
+    title.innerText = `Username: ${username} .. Password: ${password}`;
 
-
-    if (!username) {
-        return alert("You must add a user name");
+    if (!username || !password) {
+        return alert("You must fill in all fields!");
     }
-    socket.emit("adduser", username)
 
-    useraddform.classList.add("disappear")
-    backdrop.classList.add("disappear")
+    fetch(`${URL}/users/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username, password: password }),
+            })
+            .then(response => {
+                console.log("RESPONSE:");
+                console.log(response);
+                if (!response.ok) {
+                    return alert("Password or Username incorrect :(");
+                } 
 
-
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                // Handle the response as needed
+                if (data.success){
+                    socket.emit("adduser", username)
+                    useraddform.classList.add("disappear");
+                    backdrop.classList.add("disappear");
+                    return;
+                }
+                else return alert("Password or Username incorrect :(");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
 }

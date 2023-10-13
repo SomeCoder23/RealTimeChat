@@ -14,7 +14,7 @@ const dataSource = new DataSource({
   database: process.env.DB_NAME,
   entities: [User, Chat, Message, Profile, Contacts],
   synchronize: true,
-  logging: true
+  //logging: true
 });
 
 

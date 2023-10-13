@@ -1,7 +1,7 @@
 version: '3'
 services:
   web:
-    image: somecoder23/chatapp-docker:latest
+    image: somecoder23/realtimechat:latest
     restart: always
     ports:
-      - "80:80"
+      - "5000:5000"

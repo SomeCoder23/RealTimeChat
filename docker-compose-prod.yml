@@ -1,7 +1,7 @@
 version: '3'
 services:
   web:
-    image: somecoder23/realtimechat:latest
+    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
     restart: always
     ports:
       - "5000:5000"

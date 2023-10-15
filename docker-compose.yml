@@ -1,8 +1,9 @@
 version: '3'
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  app:
+    profiles:
+      - in_docker
+    container_name: realtimechat-1-web-1
+    build: .
     ports:
       - "5000:5000"

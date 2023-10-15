@@ -41,24 +41,9 @@ const createChat = async (payload: any, type: string, cUser: User) => {
         chatName = user.username;
 
         //adds to contact....maybe should have its own endpoint?
-        const contact1 = Contacts.create({
-          user: cUser,
-          contact: user,
-          createdAt: currentTime 
-        });
-
-        const contact2 = Contacts.create({
-          user: user,
-          contact: cUser,
-          createdAt: currentTime 
-        });
-
         try {
-          db.dataSource.manager.transaction(async (transaction) => {
-            await transaction.save(contact1);
-            await transaction.save(contact2);
-          });
-          console.log("Contact created");
+          addContact(cUser, user.username);
+          addContact(user, cUser.username);
       } catch (error) {
         console.error(error);
         throw new Error('Something went wrong');
@@ -76,14 +61,14 @@ const createChat = async (payload: any, type: string, cUser: User) => {
       description: desc,
       createdAt: currentTime,
       participants: participants,
-      type: type === 'g' ? "group" : "1To1"
+      type: type.toLowerCase() === 'g' ? "group" : "1To1"
     });
 
     try {
       newChat.save().then((response) => {
         console.log("Chat created :)");
         socket.emit("joinRoom", response.id);
-        return "Chat created!";
+        return response;
       }).catch(error => {
         console.error(error);
         throw new Error('Something went wrong');
@@ -106,7 +91,7 @@ const enterRoom = async (id: number, user: User) => {
     for (const participant of chat.participants){
       if(participant.id == user.id){
         socket.emit("joinRoom", chat.id);
-        return chat.messages;
+        return await getMessages(id);
       }
     } 
     throw new Error("Chat not found");
@@ -114,11 +99,13 @@ const enterRoom = async (id: number, user: User) => {
   
 };
 
+//gets the messages of the last 24 hours for the specified chat
 const getMessages = async(id: number) => {
   const date = new Date();
   const messages = await Message.find({
     where: {
-      timeSent: MoreThan(new Date(date.getTime() - 24 * 60 * 60 * 1000))
+      timeSent: MoreThan(new Date(date.getTime() - 24 * 60 * 60 * 1000)),
+      chat_id: id
     }
   });
   const senders = messages.map(message => message.sender);
@@ -131,12 +118,12 @@ const getMessages = async(id: number) => {
   let formatedMessages : any[] = [];
 
   for(let i = 0; i < messages.length; i++){
-    formatedMessages.push({user: usernames[i], message: messages[i].content});
+    formatedMessages.push({sender: usernames[i], message: messages[i].content, sentAt: messages[i].timeSent});
   }
   return formatedMessages;
 }
 
-const sendMessage = async (message: Message, id: number, user: User)=> {
+const sendMessage = async (message: string, id: number, user: User, type: string)=> {
 
   //checks if chat exists 
   const chat = await Chat.findOneBy({id});
@@ -145,11 +132,16 @@ const sendMessage = async (message: Message, id: number, user: User)=> {
     for (const participant of chat.participants){
       if(participant.id == user.id){
         const currentTime = new Date(); 
+        if(type.toLowerCase() == "attachment"){
+          //saves attachment to file on server
+          //content is path to file
+        }
+
         const newMsg = Message.create({
-          ...message,
+          content: message,
           timeSent: currentTime,
           chat_id: id,
-          type: "text",
+          type: type.toLowerCase() === 'attachment' ? "attachment" : "text",
           sender: user.id
         }); 
         
@@ -323,6 +315,27 @@ const deleteMessage = async(id: number, user: User) => {
   }
 }
 
+const addContact = async(user: User, username: string) => {
+  const other = await User.findOneBy({username});
+  if(other){
+    const date = new Date();
+    const contact = Contacts.create({
+      user: user,
+      contact: other,
+      createdAt: date
+    });
+    
+    try {
+      return db.dataSource.manager.transaction(async (transaction) => {
+        await transaction.save(contact);
+      });
+  } catch (error) {
+    console.error(error);
+    throw new Error('Something went wrong');
+  }
+
+  } else return Error("Not found");
+} 
   
 
 const sendAttachment = async ()=> {
@@ -371,5 +384,6 @@ export {
   getMessages,
   addParticipant,
   removeParticipant,
-  deleteMessage
+  deleteMessage,
+  addContact
 };

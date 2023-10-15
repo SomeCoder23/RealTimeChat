@@ -141,3 +141,21 @@ form.Input button{
     
 
 }
+
+nav {
+    background-color: teal;
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+}
+
+main {
+    padding: 20px;
+}

@@ -25,8 +25,12 @@ router.post('/login', validateLogin, (req, res, next) =>{
   login(username, password)
     .then((data:any) => {
       console.log(data);
+      res.header('Access-Control-Allow-Credentials', 'true');
+res.header('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
       res.cookie('fullName', data.fullName, {
-        maxAge: 60 * 60 * 1000
+        maxAge: 60 * 60 * 1000,
+        domain: 'http://127.0.0.1:5500', 
+        path: '/client',  
       });
       res.cookie('loginTime', Date.now(), {
         maxAge: 60 * 60 * 1000
@@ -36,7 +40,7 @@ router.post('/login', validateLogin, (req, res, next) =>{
       });
 
       //res.redirect('/client/index.html');
-      res.status(200).json({ success: true });
+      res.status(200).json({ success: true, msg: "Successfully logged in!" });
     })
     .catch(err => {
       console.log("ERROR: " + err);
@@ -69,14 +73,15 @@ router.post('/logout', authenticate, async (req, res) =>{
       maxAge: -1
     });
   
-    res.send("Successfully logged out! :)");  
+    res.status(200).json({ success: true , msg: "Successfully logged out!"});
   }).catch((error: any) => {
     console.error(error);
-    throw new Error('Something went wrong');
+      res.status(500).json({ success: false, error: 'Logout failed' });
   });
 
 }
-else res.status(500).send("Problem logging out :(");
+else res.status(500).json({ success: false, error: 'Logout failed' });
+
 
 });
 
@@ -118,7 +123,7 @@ router.get('/', authenticate, async (req: any, res) => {
       });
     } catch(error){
       console.error(error);
-      res.status(500).send("Something went wrong!!!!");
+      res.status(500).json({ success: false, error: 'Somwthing went wrong' });
     }
     
 });
@@ -132,14 +137,15 @@ router.get('/status/:id', authenticate, async (req, res) =>{
         where: {id}
     });
     if (user) {
-        res.status(200).send(user.profile.status);
+        res.status(200).json({success: true, data: user.profile.status});
       } else {
-        res.status(404).send("User not found");
+        res.status(404).json({ success: false, error: 'User not found' });
+
       }
 
 }catch(error){
     console.error(error);
-    res.status(500).send("Something went wrong! :(")
+    res.status(500).json({ success: false, error: 'Somwthing went wrong' });
 }
 
 });
@@ -152,15 +158,15 @@ router.get('/profile', authenticate, async (req, res) =>{
     try{
       const user = res.locals.user;
       if (user) {
-          res.status(200).send(user.profile);
-        } else {
-          res.status(404).send("User not found");
-        }
+        res.status(200).json({success: true, data: user.profile});
+      } else {
+        res.status(404).json({ success: false, error: 'User not found' });
+      }
   
   }catch(error){
       console.error(error);
-      res.status(500).send("Something went wrong! :(")
-  }
+      res.status(500).json({ success: false, error: 'Somwthing went wrong' });
+    }
 });
 
 router.get('/profile/:userId', authenticate, async (req, res) =>{
@@ -171,14 +177,14 @@ router.get('/profile/:userId', authenticate, async (req, res) =>{
         where: {id}
     });
     if (user) {
-        res.status(200).send(user.profile);
-      } else {
-        res.status(404).send("User not found");
-      }
+      res.status(200).json({success: true, data: user.profile});
+    } else {
+      res.status(404).json({ success: false, error: 'User not found' });
+    }
 
-    }catch(error){
-        console.error(error);
-        res.status(500).send("Something went wrong! :(")
+  }catch(error){
+      console.error(error);
+      res.status(500).json({ success: false, error: 'Somwthing went wrong' });
     }
 }); 
 
@@ -191,11 +197,11 @@ router.put('/profile', authenticate, (req, res) =>{
     //updates currently logged in user's profile
     //all new info specified in the body
     updateUserProfile(req.body, res.locals.user).then(() => {
-      res.status(201).send("User profile successfully updated! :)");
+      res.status(201).json({ success: true, msg: "User profile successfully updated! :)"});
     }).catch(err => {
       console.log("***ERROR: ");
       console.error(err);
-      res.status(500).send(err);
+      res.status(500).json({ success: false, error: 'Somwthing went wrong' });
     });
 
 }); 
@@ -206,11 +212,11 @@ router.put('/change_password', authenticate, (req, res) =>{
   //change users password
   //user should enter old password and new password in the body
   changePassword(req.body, res.locals.user).then(() => {
-    res.status(201).send("User password changed successfully! :)");
+    res.status(201).json({ success: true, msg: "User password successfully updated! :)"});
   }).catch(err => {
     console.log("***ERROR: ");
     console.error(err);
-    res.status(500).send(err);
+    res.status(500).json({ success: false, error: 'Something went wrong' });
   });
 
 });   
@@ -223,11 +229,12 @@ router.put('/change_relationship', authenticate, (req, res) =>{
   const status = req.body.status;
   const contact = req.body.username;
   changeFriendStatus(res.locals.user, contact, status).then((data) => {
-    res.status(201).send(data);
+    res.status(201).json({ success: true, msg: `Relationship status with ${contact} changed successfully!` ,data: data});
   }).catch(err => {
     console.log("***ERROR: ");
     console.error(err);
-    res.status(500).send(err);
+    res.status(500).json({ success: false, error: 'Somwthing went wrong' });
+
   });
   
 }); 
@@ -235,7 +242,7 @@ router.put('/change_relationship', authenticate, (req, res) =>{
 
 
 //DELETE ROUTES
-
+//needs fixingg
 router.delete('/deleteAccount', authenticate, (req, res) =>{
 
   //delete user

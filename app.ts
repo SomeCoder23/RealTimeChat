@@ -15,7 +15,10 @@ app.use(express.static('client'));
 const PORT = 5000;
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+  origin: 'http://127.0.0.1:5500', 
+  credentials: true,
+}));
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -24,7 +27,6 @@ const io = new Server(server, {
   }
 });
 const users: string[] = [];
-
 
 app.use('/users', usersRouter);
 app.use('/chat', authenticate, chatRouter);
@@ -51,10 +53,12 @@ io.on('connection', (socket: Socket) => {
 
   //done
   socket.on("message", (message: string) => {
-    io.sockets.emit("message", {
+    if(socket.data.room){
+    io.to(socket.data.room).emit("message", {
       user: socket.data.user,
       message: message,
     });
+  } else socket.emit("error", "Not in room.");
   });
 
   // done
@@ -66,8 +70,9 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('leaveRoom', () => {
+    if(socket.data.room){
     socket.leave(socket.data.room);
-    console.log(`Socket left room: ${socket.data.room}`);
+    console.log(`Socket left room: ${socket.data.room}`);}
   });
 
   socket.on("disconnect", () => {

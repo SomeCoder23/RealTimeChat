@@ -1,15 +1,54 @@
 version: '3'
 services:
   app:
-    profiles:
-      - in_docker
-    container_name: realtimechat-1-web-1
-    build: .
-    environment:
-      - PORT=80
-      - DB_HOST=localhost
-      - DB_USER_NAME=root
-      - DB_PASSWORD=''
-      - DB_NAME=chatapp
+    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
     ports:
       - "5000:80"
+    environment:
+      - PORT=80
+      - DB_HOST=localhost  
+      - DB_USER_NAME=root 
+      - DB_PASSWORD=''  
+      - DB_NAME=chatapp
+  db:
+    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
+    environment:
+      - PORT=80
+      - DB_HOST=localhost  
+      - DB_USER_NAME=root  
+      - DB_PASSWORD='' 
+      - DB_NAME=chatapp
+
+# version: '3'
+# services:
+#   app:
+#     profiles:
+#       - in_docker
+#     container_name: realtimechat-1-web-1
+#     build: .
+#     environment:
+#       - PORT=80
+#       - DB_HOST=localhost
+#       - DB_USER_NAME=root
+#       - DB_PASSWORD=''
+#       - DB_NAME=chatapp
+#     ports:
+#       - "5000:80"
+# version: '3'
+# services:
+#   app:
+#     image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
+#     ports:
+#       - "5000:80"
+#     volumes:
+#       - ./app:/app
+#   db:
+#     image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
+#     volumes:
+#       - ./db:/var/lib/mysql
+#     environment:
+#       - PORT=80
+#       - DB_HOST=localhost
+#       - DB_USER_NAME=root
+#       - DB_PASSWORD=''
+#       - DB_NAME=chatapp     

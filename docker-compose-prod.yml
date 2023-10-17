@@ -1,7 +1,23 @@
 version: '3'
 services:
   web:
-    image: somecoder23/realtimechat:latest
+    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
     restart: always
     ports:
       - "5000:5000"
+
+  app:
+    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
+    restart: always
+    environment:
+      - PORT=80
+      - DB_HOST=localhost
+      - DB_USER_NAME=root
+      - DB_PASSWORD=''
+      - DB_NAME=chatapp
+    ports:
+      - "80:80"
+    # depends_on:
+    #   mysql:
+    #     condition: service_healthy
+    

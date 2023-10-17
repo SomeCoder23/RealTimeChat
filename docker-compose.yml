@@ -9,7 +9,7 @@ services:
       - PORT=80
       - DB_HOST=localhost
       - DB_USER_NAME=root
-      - DB_PASSWORD=$DB_PASSWORD
+      - DB_PASSWORD=''
       - DB_NAME=chatapp
     ports:
       - "5000:80"

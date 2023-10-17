@@ -9,6 +9,30 @@
 </head>
 <body>
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+    
+    
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Chatty</a>
+  
+      <div class="d-flex">
+        <div class="profile-dropdown">
+          <img src="https://bootdey.com/img/Content/avatar/avatar8.png" alt="Profile" class="profile-pic">
+          <span class="text-white">John Doe</span>
+          <div class="profile-dropdown-content">
+            <a class="dropdown-item" href="#" id="account">Account</a>
+            <a class="dropdown-item" href="#" id="profile">View Profile</a>
+            <a class="dropdown-item" href="#" id ="contacts">Contacts</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" id = "logout">Logout</a>
+          </div>
+        </div>
+  
+        <button class="btn btn-outline-light mx-2" id ="groups">Groups</button>
+        <button class="btn btn-outline-light" id="community">Community</button>
+      </div>
+    </div>
+  </nav>
 
 <div class="container">
 <div class="row clearfix">
@@ -87,7 +111,7 @@
                     </div>
                 </div>
                 <div class="chat-history">
-                    <ul class="m-b-0">
+                    <ul class="m-b-0" id="messages">
                         <li class="clearfix">
                             <div class="message-data text-right">
                                 <span class="message-data-time">10:10 AM, Today</span>
@@ -111,10 +135,10 @@
                 </div>
                 <div class="chat-message clearfix">
                     <div class="input-group mb-0">
-                        <div class="input-group-prepend">
+                        <div class="hovering input-group-prepend" id="send">
                             <span class="input-group-text"><i class="fa fa-send"></i></span>
                         </div>
-                        <input type="text" class="form-control" placeholder="Enter text here...">                                    
+                        <input type="text" class="form-control" id="input" placeholder="Enter text here...">                                    
                     </div>
                 </div>
             </div>
@@ -125,6 +149,7 @@
 <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.bundle.min.js"></script>
 <script type="text/javascript"></script>    
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

@@ -61,7 +61,7 @@ form.Input input{
 }
 form.Input button{
     padding: 4px;
-    background: teal;
+    background: #fa767b,;
     border: none;
     flex: 1;
     color: white;
@@ -132,7 +132,7 @@ form.Input button{
     display: block;
     margin-top: 30px;
     padding: 14px;
-    background: teal;
+    background: #fa767b,;
     border: none;
     flex: 1;
     color: white;
@@ -143,7 +143,7 @@ form.Input button{
 }
 
 nav {
-    background-color: teal;
+    background-color:#fa767b,;
     color: white;
     padding: 10px;
     text-align: center;

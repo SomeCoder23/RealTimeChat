@@ -4,7 +4,7 @@ import {
     //getUserProfile,
     updateUserProfile,
     login,
-    //logout,
+    logout,
     changePassword,
     deleteAccount,
   } from '../controllers/user.js';
@@ -18,89 +18,14 @@ var router = express.Router();
 
 //POST ROUTES
 
-router.post('/login', validateLogin, (req, res, next) =>{
-  const username = req.body.username;
-  const password = req.body.password;
+//something wrong with setting cookiesssssssssssssssssssssssssssssssssssssssssssss 
+//in the browser
+router.post('/login', validateLogin, login);
 
-  login(username, password)
-    .then((data:any) => {
-      console.log(data);
-      res.header('Access-Control-Allow-Credentials', 'true');
-res.header('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
-      res.cookie('fullName', data.fullName, {
-        maxAge: 60 * 60 * 1000,
-        domain: 'http://127.0.0.1:5500', 
-        path: '/client',  
-      });
-      res.cookie('loginTime', Date.now(), {
-        maxAge: 60 * 60 * 1000
-      });
-      res.cookie('token', data.token, {
-        maxAge: 60 * 60 * 1000
-      });
+router.post('/logout', authenticate, logout);
 
-      //res.redirect('/client/index.html');
-      res.status(200).json({ success: true, msg: "Successfully logged in!" });
-    })
-    .catch(err => {
-      console.log("ERROR: " + err);
-      res.status(500).json({ success: false, error: 'Login failed' });
-      // next({
-      //   code: "INVALID_CREDENTIALS",
-      //   message: err
-      // });
-    })
-
-});
-
-router.post('/logout', authenticate, async (req, res) =>{
-
-  const username = res.locals.user.username;
-  const user = await User.findOneBy({
-    username
-  });
-  if(user){
-  user.profile.status = "offline";
-  user.save().then((response: any) => {
-    res.cookie('fullName', '', {
-      maxAge: -1,  // This means the cookie will be deleted
-      expires: new Date(Date.now() - 1000)
-    });
-    res.cookie('loginTime', '', {
-      maxAge: -1
-    });
-    res.cookie('token', '', {
-      maxAge: -1
-    });
-  
-    res.status(200).json({ success: true , msg: "Successfully logged out!"});
-  }).catch((error: any) => {
-    console.error(error);
-      res.status(500).json({ success: false, error: 'Logout failed' });
-  });
-
-}
-else res.status(500).json({ success: false, error: 'Logout failed' });
-
-
-});
-
-router.post('/register', validateUser ,(req, res)  => {
-  console.log('Inside endpoint!');
-  console.log("BODY:");
-  console.log(req);
-  createUser(req.body).then(() => {
-    console.log("Successsssssss");
-    res.status(200).json({ success: true });
-    //res.status(201).send("User successfully registered! :)");
-  }).catch(err => {
-    console.log("***ERROR: ");
-    console.error(err);
-    res.status(500).json({ success: false, error: 'Registeration failed' });
-    //res.status(500).send(err);
-  });
-
-})
+//needs minor modifications
+router.post('/register', validateUser ,createUser);
 
 
 //GET ROUTES
@@ -192,34 +117,9 @@ router.get('/profile/:userId', authenticate, async (req, res) =>{
 //PUT ROUTES
 
 //updates profile
-router.put('/profile', authenticate, (req, res) =>{
+router.put('/profile', authenticate, updateUserProfile); 
 
-    //updates currently logged in user's profile
-    //all new info specified in the body
-    updateUserProfile(req.body, res.locals.user).then(() => {
-      res.status(201).json({ success: true, msg: "User profile successfully updated! :)"});
-    }).catch(err => {
-      console.log("***ERROR: ");
-      console.error(err);
-      res.status(500).json({ success: false, error: 'Somwthing went wrong' });
-    });
-
-}); 
-
-
-router.put('/change_password', authenticate, (req, res) =>{
-
-  //change users password
-  //user should enter old password and new password in the body
-  changePassword(req.body, res.locals.user).then(() => {
-    res.status(201).json({ success: true, msg: "User password successfully updated! :)"});
-  }).catch(err => {
-    console.log("***ERROR: ");
-    console.error(err);
-    res.status(500).json({ success: false, error: 'Something went wrong' });
-  });
-
-});   
+router.put('/change_password', authenticate, changePassword);   
 
 router.put('/change_relationship', authenticate, (req, res) =>{
   
@@ -240,21 +140,9 @@ router.put('/change_relationship', authenticate, (req, res) =>{
 }); 
 
 
-
 //DELETE ROUTES
-//needs fixingg
-router.delete('/deleteAccount', authenticate, (req, res) =>{
-
-  //delete user
-  deleteAccount(res.locals.user).then(() => {
-    res.status(201).send("User successfully deleted! :)");
-  }).catch(err => {
-    console.log("***ERROR: ");
-    console.error(err);
-    res.status(500).send(err);
-  });
-
-});
+//needs work
+router.delete('/deleteAccount', authenticate, deleteAccount);
 
 // router.post('/forgotpassword', (req, res) =>{
 //     });

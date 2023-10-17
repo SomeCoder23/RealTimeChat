@@ -4,61 +4,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title>Chatty</title>
+    <title>Login Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to top, #f6a7aa, #faece8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f4676c;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            text-align: center;
+            color: #ff4447;
+            margin-bottom: 10px;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            border: 2px solid #f05157; /* Border color */
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc; /* Input border color */
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #f2888b;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #f25257;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .signup-link a {
+            color: #f4676c;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        p {
+            color: red;
+            font-size: small;
+        }
+    </style>
 </head>
 
 <body>
+    <h1>Welcome to Chatty!</h1>
+    <br><br>
+    <div class="login-container">
+        <h1>Login</h1>
+        <form id="login-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
 
-    <div class="backdrop">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <p id="toast"></p>
+            <button type="submit">Login</button>
+        </form>
 
+        <div class="signup-link">
+            Don't have an account? <a href="register.html">Sign up</a>
+        </div>
     </div>
-    <form class="modal">
-
-        <h1 id="title">Welcome</h1>
-        <br>
-        <p id="content">Enter Your User Name</p>
-        <br>
-
-        <input placeholder="Enter Username" type="text" id="username" name="username" required>
-        <input placeholder="Enter Password" type="password" id="password" name="password" required>
-        <br>
-        <button type="submit">Login</button>
-    </form>
-    
-    <script>
-
-        const loginForm = document.getElementById('loginForm');
-
-        loginForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(loginForm);
-
-            const data = {};
-            formData.forEach((value, key) => {
-            data[key] = value;
-            });
-
-            fetch('/users/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-            })
-            .then(response => response.text())
-            .then(result => {
-                console.log(result);
-                if(result == "success"){
-                    window.location.href = "/index.html";
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        });
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script src="main.js"></script>
 </body>
 
 </html>

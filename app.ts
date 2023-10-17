@@ -9,12 +9,18 @@ import cors from 'cors';
 import { Server, Socket } from "socket.io";
 import dataSource from './db/dataSource.js';
 import { authenticate } from './middleware/auth/authenticate.js';
+import session from 'express-session';
 
 var app = express();
 app.use(express.static('client'));
 const PORT = 5000;
 app.use(express.json());
-app.use(cookieParser());
+app.use(session({
+  secret: 'sfhosjfisjfsdfnhushfy',
+  cookie: {}
+}));
+
+//app.use(cookieParser());
 app.use(cors({
   origin: 'http://127.0.0.1:5500', 
   credentials: true,
@@ -23,7 +29,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 const users: string[] = [];
@@ -54,7 +61,8 @@ io.on('connection', (socket: Socket) => {
   //done
   socket.on("message", (message: string) => {
     if(socket.data.room){
-    io.to(socket.data.room).emit("message", {
+      //.to(socket.data.room).
+    io.sockets.emit("message", {
       user: socket.data.user,
       message: message,
     });

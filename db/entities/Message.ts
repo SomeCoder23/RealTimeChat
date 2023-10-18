@@ -21,7 +21,7 @@ export class Message extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp', /*default: () => 'CURRENT_TIMESTAMP',*/ nullable: false })
   timeSent: Date;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, {cascade: true, eager: true})
   sender: string;
 
   @ManyToOne(() => Chat, chat => chat.messages, {nullable: true})

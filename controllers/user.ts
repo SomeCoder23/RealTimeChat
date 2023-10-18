@@ -5,6 +5,8 @@ import { User } from "../db/entities/User.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import express from 'express';
+import { Contacts } from "../db/entities/Contacts.js";
+import { In } from "typeorm";
 
 const createUser = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
@@ -96,28 +98,28 @@ const login = async ( req: express.Request, res: express.Response, next: express
         //change presences status of user.
         //user.profile.status = "online";
        // await user.save();
-      console.log("SESSION:");
-      console.log(req.session);
-      (req.session as any).fullName = user.profile.fullName;
-      (req.session as any).token = token;
-      console.log("SESSION:");
-      console.log(req.session);
-      console.log((req.session as any).token);
+      // console.log("SESSION:");
+      // console.log(req.session);
+      // (req.session as any).fullName = user.profile.fullName;
+      // (req.session as any).token = token;
+      // console.log("SESSION:");
+      // console.log(req.session);
+      // console.log((req.session as any).token);
       // res.header('Access-Control-Allow-Credentials', 'true');
       // res.header('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
-      // res.cookie('fullName', data.fullName, {
-      //   httpOnly: true,
-      //   maxAge: 60 * 60 * 1000,
-      //   domain: 'http://127.0.0.1:5500', 
-      //   path: '/client',  
-      // });
-      // res.cookie('loginTime', Date.now(), {
-      //   maxAge: 60 * 60 * 1000
-      // });
-      // res.cookie('token', data.token, {
-      //   maxAge: 60 * 60 * 1000
-      // });
-       res.status(200).json({ success: true, msg: "Successfully logged in!" });
+      res.cookie('fullName', user.profile.fullName, {
+        httpOnly: true,
+        maxAge: 60 * 60 * 1000,
+        domain: 'http://127.0.0.1:5500', 
+        path: '/client',  
+      });
+      res.cookie('loginTime', Date.now(), {
+        maxAge: 60 * 60 * 1000
+      });
+      res.cookie('token', token, {
+        maxAge: 60 * 60 * 1000
+      });
+       res.status(200).json({ success: true, msg: "Successfully logged in!" }).send();
         
       } else {
         res.status(500).json({success: false, error: "Invalid Username or password!"});
@@ -195,6 +197,29 @@ const logout = async ( req: express.Request, res: express.Response, next: expres
 else res.status(500).json({ success: false, error: 'Logout failed' });
 }
 
+const getContacts = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const contacts = await Contacts.find({where: 
+    {user: res.locals.user}
+  })
+
+  //NOTE: if no user has no contacts yet -> send appropraite message.
+  if(contacts){
+    const people = await formatContacts(contacts);
+    res.status(200).json({success: true, data: people});
+  }
+  else res.status(500).json({success: false, error: "Problem occurred"});
+
+}
+
+const formatContacts = async (contacts: Contacts[]) => {
+  const people = contacts.map(contact => contact.contact);
+  let formatedContacts = [];
+  for(let i = 0; i < contacts.length; i++){
+    formatedContacts.push({contact: people[i].username, relationship: contacts[i].relationshipStatus, started: contacts[i].createdAt})
+  }
+  return formatedContacts;
+}
+
 export {
   createUser,
   updateUserProfile,
@@ -202,4 +227,5 @@ export {
   logout,
   changePassword,
   deleteAccount,
+  getContacts
 };

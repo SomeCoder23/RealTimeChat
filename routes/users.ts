@@ -7,6 +7,7 @@ import {
     logout,
     changePassword,
     deleteAccount,
+    getContacts
   } from '../controllers/user.js';
 import {validateUser, validateLogin} from '../middleware/validation/user.js';
 import { authenticate } from '../middleware/auth/authenticate.js';
@@ -113,42 +114,20 @@ router.get('/profile/:userId', authenticate, async (req, res) =>{
     }
 }); 
 
+router.get('/contacts', authenticate, getContacts);
+
 
 //PUT ROUTES
 
 //updates profile
 router.put('/profile', authenticate, updateUserProfile); 
-
 router.put('/change_password', authenticate, changePassword);   
-
-router.put('/change_relationship', authenticate, (req, res) =>{
-  
-  //first checks if users are even connected
-  //change the relationship status with the user specified in the body
-  //user can MUTE, BLOCK other users 
-  const status = req.body.status;
-  const contact = req.body.username;
-  changeFriendStatus(res.locals.user, contact, status).then((data) => {
-    res.status(201).json({ success: true, msg: `Relationship status with ${contact} changed successfully!` ,data: data});
-  }).catch(err => {
-    console.log("***ERROR: ");
-    console.error(err);
-    res.status(500).json({ success: false, error: 'Somwthing went wrong' });
-
-  });
-  
-}); 
+router.put('/change_relationship', authenticate, changeFriendStatus); 
 
 
 //DELETE ROUTES
 //needs work
 router.delete('/deleteAccount', authenticate, deleteAccount);
-
-// router.post('/forgotpassword', (req, res) =>{
-//     });
-//  router.post('/resetpassword', (req, res) =>{
-//         });
-
 
 
 export default router;

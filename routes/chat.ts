@@ -32,28 +32,21 @@ const storage = multer.diskStorage({
     callback(null, Date.now() + '-' + file.originalname)
   }
 });
-
 const upload = multer({ storage });
 router.use("/uploads", express.static(path.join(__dirname, "uploads")));
-  
 
 //POST ROUTES
-
 router.post('/sendMessage/:chatId', (req, res, next) => sendMessage(req, res, next, "text")); 
-
 //needs some modifications
 router.post('/sendAttachment/:chatId', upload.single('file'), (req, res, next) => sendMessage(req, res, next, "attachment")); 
 router.post('/create_group', createChat);                
-router.post('/start_chat', createChat);           
-
+router.post('/start_chat/:username', createChat);           
 //i still forgot to test these two
 router.post('/add_participant', addParticipant);         
 router.post('/remove_participant', removeParticipant);  
-
 //needs some modifications
 router.post('/clear_chat/:chatId', clearChat);    
 router.post('/addContact/:username', addContact);
-
 //not done 
 router.post('/leave_chat/:chatId', (req, res) =>{
   res.send("Leaving chat...");
@@ -96,18 +89,15 @@ router.get('/', async (req: any, res) => {
     }
     
 });
-
 //not started*********************************
 router.get('/search', (req, res) =>{
 
   //searches a specific chat for the text specified in the body
 
 });     
-
 router.get('/groupInfo/:chatId', getGroupInfo);
 router.get('/conversations', getChats);          
-router.get('/getMessages/:chatId', async (req, res) => getChatMessages);    
-
+router.get('/getMessages/:chatId', getChatMessages);    
 //not done
 router.get('/history/:chatId', getHistory); 
 
@@ -121,7 +111,6 @@ router.delete('/delete_chat/:chatId', (req, res) =>{
     // if group chat only admin can delete the entire chat, others can leave of they don't want to participate
 
 });
-
 
 
 export default router;

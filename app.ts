@@ -22,13 +22,11 @@ app.use(
   })
 );
 
-//app.use(cookieParser());
-app.use(
-  cors({
-    origin: "http://127.0.0.1:5500",
-    credentials: true,
-  })
-);
+app.use(cookieParser());
+app.use(cors({
+  origin: 'http://127.0.0.1:5500', 
+  credentials: true,
+}));
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

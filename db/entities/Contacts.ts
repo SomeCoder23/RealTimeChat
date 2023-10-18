@@ -9,7 +9,7 @@ export class Contacts extends BaseEntity {
     @ManyToOne(() => User)
     user: User;
 
-    @ManyToOne(() => User)
+    @ManyToOne(() => User, {cascade: true, eager: true})
     contact: User;
 
     @Column({

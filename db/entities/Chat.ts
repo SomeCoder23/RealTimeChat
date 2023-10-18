@@ -7,10 +7,10 @@ export class Chat extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 100, nullable: true, default: "Unknown101"})
   name: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ length: 255, nullable: true, default: "Some chat room...have fun chatting :)"})
   description: string;
 
   @Column({

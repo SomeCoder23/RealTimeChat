@@ -9,6 +9,8 @@ import { Contacts } from "../db/entities/Contacts.js";
 //const socket = ioClient('http://localhost:5000');
 import express from 'express';
 
+//NOTE #1: if there are no valid participants DO NOT CREATE GROUP
+//NOTE #2: if one-to-one chat already exists do not create. (duhh of course)
 const createChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const currentUser = res.locals.user;
   let chatName, desc;
@@ -47,13 +49,13 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
         chatName = user.username;
 
         //adds to contact....maybe should have its own endpoint?
-        try {
-          // addContact(currentUser , user.username);
-          // addContact(user, currentUser.username);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({success: false, error: 'Problem Occurred'});
-      }
+      //   try {
+      //     // addContact(currentUser , user.username);
+      //     // addContact(user, currentUser.username);
+      // } catch (error) {
+      //   console.error(error);
+      //   res.status(500).json({success: false, error: 'Problem Occurred'});
+      // }
 
 
       } else {
@@ -68,7 +70,7 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
       description: desc,
       createdAt: currentTime,
       participants: participants,
-      type: type = "group" ? "group" : "1To1"
+      type: type == "group" ? "group" : "1To1"
     });
 
     try {
@@ -99,22 +101,15 @@ const getChatMessages = async ( req: express.Request, res: express.Response, nex
   const user = res.locals.user;
   const date = new Date();
 
-  const isvalidated = await validate(id, user);
+  const chat = await validate(id, user);
 
-  if(isvalidated){
-    //get the messages
-    const messages = await Message.find({
-      where: {
-        timeSent: MoreThan(new Date(date.getTime() - 24 * 60 * 60 * 1000)),
-        chat_id: id
-      }
-    });
-
+  if(chat){
+    const messages = chat.messages.filter(message => message.timeSent > new Date(date.getTime() - 24 * 60 * 60 * 1000))
     //format messages so to only send: sender's username, message content, and time sent
     const formatedMessages = await formatMessages(messages);
     res.status(200).json({success: true, data: formatedMessages});
   }
-  res.status(401).json({success: false, error: 'Chat not found'});
+  else res.status(401).json({success: false, error: 'Chat not found'});
   
 }
 
@@ -172,6 +167,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
 
 }
 
+//NOTE: clears chat for all participants. Maybe should fix that.
 const clearChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id = Number(req.params.chatId);
   const user = res.locals.user;
@@ -219,27 +215,22 @@ const getChats = async ( req: express.Request, res: express.Response, next: expr
 const getHistory = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id : number = Number(req.params.chatId);
   const user = res.locals.user;
-  const isvalidated = await validate(id, user);
-  if(isvalidated){
-    //get the messages
-    const messages = await Message.find({
-      where: {
-        chat_id: id
-      }
-    });
-    const formatedMessages = await formatMessages(messages);
+  const chat = await validate(id, user);
+  if(chat){  
+    const formatedMessages = await formatMessages(chat.messages);
     res.status(200).json({success: true, data: formatedMessages});
   }
-  res.status(401).json({success: false, error: 'Chat not found'});
+  else res.status(401).json({success: false, error: 'Chat not found'});
 }
 
+//NOTE: if entered user already a participant send appropriate message
 const addParticipant = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   const id = Number(req.body.chatID);
   const username = req.body.username;
 
   const chat = await validate(id, user);
-  if(chat){
+  if(chat && chat.type == "group"){
     const newUser = await User.findOneBy({username});
     if(newUser){
     chat.participants.push(newUser);
@@ -256,19 +247,21 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
 }
 
 // //NOTE: maybe should add admin attribute to chat, and only allow admin to remove
+//NOTE: check if entered user is even the chat 
+//DID NOT WORK, NEED TO DELETE IT FROM JOINED TABLE***************
 const removeParticipant = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   const id = Number(req.body.chatID);
   const username = req.body.username;
 
   const chat = await validate(id, user);
-  if(chat){
+  if(chat  && chat.type == "group"){
     const oldUser = await User.findOneBy({username});
     if(oldUser){
       const participants = chat?.participants.filter(p => p !== oldUser);
       chat.participants = participants;
       chat.save().then(response => {
-        res.status(201).json({success: true, msg: `${username} removed successfully`});
+        res.status(201).json({success: true, msg: `${username} removed successfully`, data: response});
       }).catch(error => {
         console.log(error);
         res.status(500).json({success: false, error: "Problem occurred"});
@@ -283,8 +276,9 @@ const deleteMessage = async ( req: express.Request, res: express.Response, next:
   const user = res.locals.user;
   const id = Number(req.params.messageId);
   const message = await Message.findOneBy({id});
-  if(message){
-    if(message.sender === user.id){
+  if(message){ 
+    if(message.sender.toString() === user.toString()){
+      console.log("Yup, this person sent it.");
       try{
         await message.remove();
         res.status(200).json({success: true, msg: "Message Deleted"});
@@ -292,10 +286,11 @@ const deleteMessage = async ( req: express.Request, res: express.Response, next:
         console.log(err);
         res.status(500).json({success: false, error: "Problem occurred"});
       }
-    }
+    } else res.status(400).json({success: false, error: "Can't delete a message you didn't send dude."});
   } else res.status(400).json({success: false, error: "Message not found"});
 }
 
+//NOTE: needs to check if contact already exists before creating one.
 const addContact = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   const username = req.params.username;
@@ -314,12 +309,13 @@ const addContact = async ( req: express.Request, res: express.Response, next: ex
         await transaction.save(contact);
         res.status(200).json({success: true, msg: "Added new contact!", data: contact});
       });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({success: false, error: "Problem occurred"});
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({success: false, error: "Problem occurred"});
+    }
+  } else {
+    res.status(400).json({success: false, error: "This other person doesn't seem to exist :("});
   }
-
-  } res.status(400).json({success: false, error: "This other person doesn't seem to exist :("});
 }
 
 const changeFriendStatus = async ( req: express.Request, res: express.Response, next: express.NextFunction) =>{
@@ -390,16 +386,11 @@ const formatChatInfo = (chat: Chat) => {
 
 const formatMessages = async (messages: Message[]) => {
   const senders = messages.map(message => message.sender);
-  const users = await User.find({
-    where: {
-      id: In(senders)
-    }
-  });
-  const usernames = users.map(user => user.username);
+  //const usernames = users.map(user => user.username);
   let formatedMessages : any[] = [];
 
   for(let i = 0; i < messages.length; i++){
-    formatedMessages.push({sender: usernames[i], message: messages[i].content, sentAt: messages[i].timeSent});
+    formatedMessages.push({sender: senders[i].toString(), message: messages[i].content, sentAt: messages[i].timeSent});
   }
   return formatedMessages;
 }

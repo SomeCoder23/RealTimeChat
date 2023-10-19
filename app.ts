@@ -1,24 +1,26 @@
-import './config.js';
-import express from 'express';
-import db from './db/dataSource.js';
-import usersRouter from './routes/users.js';
-import chatRouter from './routes/chat.js';
-import cookieParser from 'cookie-parser';
+import "./config.js";
+import express from "express";
+import db from "./db/dataSource.js";
+import usersRouter from "./routes/users.js";
+import chatRouter from "./routes/chat.js";
+import cookieParser from "cookie-parser";
 import http from "http";
-import cors from 'cors';
+import cors from "cors";
 import { Server, Socket } from "socket.io";
-import dataSource from './db/dataSource.js';
-import { authenticate } from './middleware/auth/authenticate.js';
-import session from 'express-session';
+import dataSource from "./db/dataSource.js";
+import { authenticate } from "./middleware/auth/authenticate.js";
+import session from "express-session";
 
 var app = express();
-app.use(express.static('client'));
+app.use(express.static("client"));
 const PORT = 5000;
 app.use(express.json());
-app.use(session({
-  secret: 'sfhosjfisjfsdfnhushfy',
-  cookie: {}
-}));
+app.use(
+  session({
+    secret: "sfhosjfisjfsdfnhushfy",
+    cookie: {},
+  })
+);
 
 app.use(cookieParser());
 app.use(cors({
@@ -30,25 +32,24 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 const users: string[] = [];
 
-app.use('/users', usersRouter);
-app.use('/chat', authenticate, chatRouter);
+app.use("/users", usersRouter);
+app.use("/chat", authenticate, chatRouter);
 
-app.get('/', (req, res) =>{
+app.get("/", (req, res) => {
   res.send("Welcome to the Real-Time Chat App!");
 });
 
-app.get('/health', (req, res) =>{
+app.get("/health", (req, res) => {
   res.status(200).send("Everything Good :)");
 });
 
-
-io.on('connection', (socket: Socket) => {
-  console.log('connected to', socket.id);
+io.on("connection", (socket: Socket) => {
+  console.log("connected to", socket.id);
 
   //done
   socket.on("adduser", (username: string) => {
@@ -60,27 +61,28 @@ io.on('connection', (socket: Socket) => {
 
   //done
   socket.on("message", (message: string) => {
-    if(socket.data.room){
+    if (socket.data.room) {
       //.to(socket.data.room).
-    io.sockets.emit("message", {
-      user: socket.data.user,
-      message: message,
-    });
-  } else socket.emit("error", "Not in room.");
+      io.sockets.emit("message", {
+        user: socket.data.user,
+        message: message,
+      });
+    } else socket.emit("error", "Not in room.");
   });
 
   // done
-  socket.on('joinRoom', (room) => {
+  socket.on("joinRoom", (room) => {
     socket.join(room);
     socket.data.room = room;
     console.log(`Socket joined room: ${room}`);
     io.sockets.emit("joinedRoom", room);
   });
 
-  socket.on('leaveRoom', () => {
-    if(socket.data.room){
-    socket.leave(socket.data.room);
-    console.log(`Socket left room: ${socket.data.room}`);}
+  socket.on("leaveRoom", () => {
+    if (socket.data.room) {
+      socket.leave(socket.data.room);
+      console.log(`Socket left room: ${socket.data.room}`);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -94,10 +96,9 @@ io.on('connection', (socket: Socket) => {
     }
 
     io.sockets.emit("users", users);
-    console.log('remaining users: ', users);
+    console.log("remaining users: ", users);
   });
 });
-
 
 server.listen(PORT, () => {
   console.log("SERVER IS RUNNING");
@@ -107,7 +108,7 @@ server.listen(PORT, () => {
 // app.listen(PORT, () => {
 //     console.log(`App is listening on port ${PORT}`);
 //     db.initialize();
-  
+
 // });
 
 export default app;

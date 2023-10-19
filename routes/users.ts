@@ -1,7 +1,7 @@
 import express from 'express';
 import {
     createUser,
-    //getUserProfile,
+    getUsers,
     updateUserProfile,
     login,
     logout,
@@ -12,9 +12,7 @@ import {
 import {validateUser, validateLogin} from '../middleware/validation/user.js';
 import { authenticate } from '../middleware/auth/authenticate.js';
 import { User } from '../db/entities/User.js';
-import { In } from 'typeorm';
-import { changeFriendStatus } from '../controllers/chat.js';
-
+import { changeFriendStatus, addContact } from '../controllers/chat.js';
 var router = express.Router();
 
 //POST ROUTES
@@ -22,38 +20,13 @@ var router = express.Router();
 //something wrong with setting cookiesssssssssssssssssssssssssssssssssssssssssssss 
 //in the browser
 router.post('/login', validateLogin, login);
-
 router.post('/logout', authenticate, logout);
-
-//needs minor modifications
 router.post('/register', validateUser ,createUser);
-
+router.post('/addContact/:username', authenticate, addContact);
 
 //GET ROUTES
-
-//needs to format output
-router.get('/', authenticate, async (req: any, res) => {
-  try{
-      const page = parseInt(req.query.page || '1');
-      const pageSize = parseInt(req.query.pageSize || '10');
-      const [items, total] = await User.findAndCount({
-        skip: pageSize * (page - 1),
-        take: pageSize
-      });
-      
-      res.send({
-        page: 1,
-        pageSize: items.length,
-        total,
-        items
-      });
-    } catch(error){
-      console.error(error);
-      res.status(500).json({ success: false, error: 'Somwthing went wrong' });
-    }
-    
-});
-
+router.get('/', authenticate, getUsers);
+router.get('/contacts', authenticate, getContacts);
 router.get('/status/:id', authenticate, async (req, res) =>{
 
   //gets the presence status of the specified user 
@@ -76,8 +49,6 @@ router.get('/status/:id', authenticate, async (req, res) =>{
 
 });
 
-//the get profile endpoints also display the status of the user (online/offline)
-//probably needs formating
 router.get('/profile', authenticate, async (req, res) =>{
 
     //gets the currently logged in user's profile
@@ -114,19 +85,13 @@ router.get('/profile/:userId', authenticate, async (req, res) =>{
     }
 }); 
 
-router.get('/contacts', authenticate, getContacts);
-
-
 //PUT ROUTES
-
-//updates profile
 router.put('/profile', authenticate, updateUserProfile); 
 router.put('/change_password', authenticate, changePassword);   
 router.put('/change_relationship', authenticate, changeFriendStatus); 
 
-
 //DELETE ROUTES
-//needs work
+//doesn't work properly :(
 router.delete('/deleteAccount', authenticate, deleteAccount);
 
 

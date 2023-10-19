@@ -9,8 +9,7 @@ import { Contacts } from "../db/entities/Contacts.js";
 //const socket = ioClient('http://localhost:5000');
 import express from 'express';
 
-//NOTE #1: if there are no valid participants DO NOT CREATE GROUP
-//NOTE #2: if one-to-one chat already exists do not create. (duhh of course)
+//NOTE: when creating a one-to-one chat should i add the users to each others contacts if not added already????
 const createChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const currentUser = res.locals.user;
   let chatName, desc;
@@ -31,6 +30,10 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
             username: In(req.body.participants)
           }
         });
+        if(users.length < 1){
+          res.status(400).json({success: false, error: "No valid participants"}); 
+          return;
+        }
         participants = users;
 
       } catch(err){
@@ -43,6 +46,15 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
       const username = req.params.username;
       const user = await User.findOneBy({ username });
       if (user) {
+        //check if there already exits a chat.
+        const chat = await Chat.find({where: {
+          type: "1To1",
+          participants: [currentUser, user]
+        }})
+        if(chat){
+          res.status(409).json({success: false, error: "Chat already exists", data: chat});
+          return;
+        }
         console.log("User " + user.profile.fullName + " found!!");
         participants = [user];
         desc = "A one-to-one chat";
@@ -105,6 +117,7 @@ const getChatMessages = async ( req: express.Request, res: express.Response, nex
 
   if(chat){
     const messages = chat.messages.filter(message => message.timeSent > new Date(date.getTime() - 24 * 60 * 60 * 1000))
+    console.log("Inside....");
     //format messages so to only send: sender's username, message content, and time sent
     const formatedMessages = await formatMessages(messages);
     res.status(200).json({success: true, data: formatedMessages});
@@ -112,6 +125,7 @@ const getChatMessages = async ( req: express.Request, res: express.Response, nex
   else res.status(401).json({success: false, error: 'Chat not found'});
   
 }
+
 
 const getGroupInfo = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id = Number(req.params.chatId);
@@ -125,6 +139,7 @@ const getGroupInfo = async ( req: express.Request, res: express.Response, next: 
 
 }
 
+//NOTE: change the code for attachments so it uploads it to s3 not folder uploads folder
 const sendMessage = async ( req: express.Request, res: express.Response, next: express.NextFunction, type: string) => {
   const user = res.locals.user;
   const id = Number(req.params.chatId);
@@ -167,7 +182,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
 
 }
 
-//NOTE: clears chat for all participants. Maybe should fix that.
+//NOTE: clears chat for all participants. Should fix that...maybe..
 const clearChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id = Number(req.params.chatId);
   const user = res.locals.user;
@@ -186,9 +201,14 @@ const clearChat = async ( req: express.Request, res: express.Response, next: exp
 
 }
 
-const leaveRoom = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {}
+//NOTE: after user leaves a chat they can no longer see it listed in their conversations, should i 
+//maybe change that so they don't see any new messages only????? LATER
+const leaveRoom = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  req.body.username = res.locals.user.username;
+  req.body.chatID = req.params.chatId;
+  removeParticipant(req, res, next);
+}
 
-//NOTE: needs formating
 const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   try{
@@ -202,7 +222,8 @@ const getChats = async ( req: express.Request, res: express.Response, next: expr
           },
         });
         //leaveRoom();
-        res.status(200).json({success: true, data: chats});
+        const formatedChats = chats.map(chat => formatChatInfo(chat));
+        res.status(200).json({success: true, data: formatedChats});
     
       } catch(error){
         console.error(error);
@@ -223,18 +244,24 @@ const getHistory = async ( req: express.Request, res: express.Response, next: ex
   else res.status(401).json({success: false, error: 'Chat not found'});
 }
 
-//NOTE: if entered user already a participant send appropriate message
 const addParticipant = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   const id = Number(req.body.chatID);
   const username = req.body.username;
 
   const chat = await validate(id, user);
+  //ONLY add participants to group chat
   if(chat && chat.type == "group"){
     const newUser = await User.findOneBy({username});
     if(newUser){
-    chat.participants.push(newUser);
-    chat.save().then(response => {
+      //checks if user already a participant, if so send an error message
+      const userAdded = chat.participants.filter(p => p.id === newUser.id);
+      if(userAdded.length >= 1){
+        res.status(400).json({success: false, error: "Participant already added to group"});
+        return;
+      }
+      chat.participants.push(newUser);
+      chat.save().then(response => {
       res.status(200).json({success: true, data: response, msg: `${username} added successfully.`});
     }).catch(error => {
       console.log(error);
@@ -247,8 +274,6 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
 }
 
 // //NOTE: maybe should add admin attribute to chat, and only allow admin to remove
-//NOTE: check if entered user is even the chat 
-//DID NOT WORK, NEED TO DELETE IT FROM JOINED TABLE***************
 const removeParticipant = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   const id = Number(req.body.chatID);
@@ -258,7 +283,14 @@ const removeParticipant = async ( req: express.Request, res: express.Response, n
   if(chat  && chat.type == "group"){
     const oldUser = await User.findOneBy({username});
     if(oldUser){
-      const participants = chat?.participants.filter(p => p !== oldUser);
+      //filter out the participant
+      const participants = chat.participants.filter(p => p.id !== oldUser.id);
+      //check if they were even a participant, return if they weren't
+      if(chat.participants.length === participants.length){
+        res.status(400).json({success: false, error: "Participant isn't even in the group."});
+        return;
+      }
+      
       chat.participants = participants;
       chat.save().then(response => {
         res.status(201).json({success: true, msg: `${username} removed successfully`, data: response});
@@ -290,13 +322,25 @@ const deleteMessage = async ( req: express.Request, res: express.Response, next:
   } else res.status(400).json({success: false, error: "Message not found"});
 }
 
-//NOTE: needs to check if contact already exists before creating one.
 const addContact = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   const username = req.params.username;
 
-  const other = await User.findOneBy({username});
+  const other : any = await User.findOneBy({username});
   if(other){
+    //checks if contact already exists.
+    const exists = await Contacts.find({
+      where: {
+        user: user,
+        contact: other
+      }
+    }) 
+
+    if(exists[0]){
+      res.status(409).json({success: false, error: "Contact already exists."});
+      return;
+    }
+
     const date = new Date();
     const contact = Contacts.create({
       user: user,
@@ -377,23 +421,24 @@ const validate = async (id: number, user: User) => {
 const formatChatInfo = (chat: Chat) => {
   const usernames = chat.participants.map((user) => user.username);
   return {
+    id: chat.id,
     name: chat.name,
     description: chat.description,
+    totalParticipants: usernames.length, 
     createdAt: chat.createdAt,
     participants: usernames
   }
 }
 
 const formatMessages = async (messages: Message[]) => {
-  const senders = messages.map(message => message.sender);
-  //const usernames = users.map(user => user.username);
+  const senders : any = messages.map(message => message.sender);
   let formatedMessages : any[] = [];
-
   for(let i = 0; i < messages.length; i++){
-    formatedMessages.push({sender: senders[i].toString(), message: messages[i].content, sentAt: messages[i].timeSent});
+    formatedMessages.push({sender: senders[i].username, message: messages[i].content, sentAt: messages[i].timeSent});
   }
   return formatedMessages;
 }
+
 
 
 

@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, BeforeRemove, Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User.js";
 import { Chat } from "./Chat.js";
 
@@ -21,11 +21,18 @@ export class Message extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp', /*default: () => 'CURRENT_TIMESTAMP',*/ nullable: false })
   timeSent: Date;
 
-  @ManyToOne(() => User, {cascade: true, eager: true})
+  @ManyToOne(() => User, {eager: true, onDelete: 'SET NULL'})
   sender: string;
 
   @ManyToOne(() => Chat, chat => chat.messages, {nullable: true})
   chat_id: number;
+
+  @BeforeRemove()
+  private async beforeRemove() {
+    if (this.sender) 
+      this.sender = "Unknown";  
+    await this.save(); 
+  }
 
 
 }

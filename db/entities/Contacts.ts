@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, JoinTable, BeforeRemove, BeforeInsert } from "typeorm";
 import { User } from "./User.js";
 
 @Entity()
@@ -6,11 +6,16 @@ export class Contacts extends BaseEntity {
     @PrimaryGeneratedColumn('increment')
     id: number;
 
-    @ManyToOne(() => User)
+    @Column({length: 50, nullable: false})
+    name: string;
+
+    @ManyToOne(() => User, {eager: true})
+//    @JoinTable()
     user: User;
 
-    @ManyToOne(() => User, {cascade: true, eager: true})
+    @ManyToOne(() => User, {eager: true, onDelete: 'SET NULL'})
     contact: User;
+
 
     @Column({
         type: 'enum',
@@ -24,5 +29,13 @@ export class Contacts extends BaseEntity {
         default: () => "CURRENT_TIMESTAMP()"*/
     })
     createdAt: Date;
+
+    @BeforeInsert()
+    async hashPassword() {
+      if (this.contact) {
+        this.name = this.contact.username;
+      }
+    }
+
 
 }

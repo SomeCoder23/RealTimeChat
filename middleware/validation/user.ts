@@ -35,6 +35,8 @@ const validateUser = (req: express.Request,
   
   if (errorList.length) {
     console.log("Something is wrong 2 :(");
+    console.log(errorList);
+    res.status(500).send(errorList);
     next({
       code: "INVALID_INPUT",
       message: errorList.join(', ')

@@ -1,4 +1,3 @@
-import { ChatTypes } from "../@types/types.js";
 import db from '../db/dataSource.js';
 import { Profile } from "../db/entities/Profile.js";
 import { User } from "../db/entities/User.js";
@@ -6,7 +5,6 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import express from 'express';
 import { Contacts } from "../db/entities/Contacts.js";
-import { In } from "typeorm";
 
 const createUser = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
@@ -152,20 +150,33 @@ const changePassword = async ( req: express.Request, res: express.Response, next
       else res.status(400).json({success: false, error: 'Password incorrect'});
 }
 
-
 const deleteAccount = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Delete all data related with this account from DB/AWS S3 etc...
   const user = res.locals.user;
     try {
-        await user.remove();
-        res.status(201).json({success: true, msg: "Account Deleted!"});
+      await db.dataSource.manager.transaction(async (transaction) => {
+        const contacts = await Contacts.find({
+          where: [
+            { contact: user },
+            { user: user },
+          ],
+        });
+        const contactRemoval = contacts.map(async (contact) => {
+            await transaction.remove(Contacts, contact);
+        });
+
+        await Promise.all(contactRemoval);
+
+        await transaction.remove(User, user);
+    });
+
+    res.status(201).json({ success: true, msg: 'Account Deleted!' });
      
     } catch (error) {
         console.log(error);
         res.status(500).json({success: false, error: 'Failed to delete account'});
     }
 }
-
 
 const logout = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   
@@ -211,6 +222,34 @@ const getContacts = async ( req: express.Request, res: express.Response, next: e
 
 }
 
+const getUsers = async ( req: any, res: express.Response, next: express.NextFunction) => {
+  try{
+    const page = parseInt(req.query.page || '1');
+    const pageSize = parseInt(req.query.pageSize || '10');
+    const [users, total] = await User.findAndCount({
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
+    const formatedUsers = users.map(user => {
+      return {
+        username: user.username,
+        name: user.profile.fullName,
+        bio: user.profile.bio
+      }
+    });
+    const data = {
+      page: 1,
+      pageSize: users.length,
+      total,
+      formatedUsers
+    }
+    res.status(200).json({success: true, data: data});
+  } catch(error){
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Somwthing went wrong' });
+  }
+}
+
 const formatContacts = async (contacts: Contacts[]) => {
   const people = contacts.map(contact => contact.contact);
   let formatedContacts = [];
@@ -220,6 +259,7 @@ const formatContacts = async (contacts: Contacts[]) => {
   return formatedContacts;
 }
 
+
 export {
   createUser,
   updateUserProfile,
@@ -227,5 +267,6 @@ export {
   logout,
   changePassword,
   deleteAccount,
-  getContacts
+  getContacts,
+  getUsers
 };

@@ -41,3 +41,6 @@ jobs:
       env:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         GIT_VERSION: ${{ steps.image_version.outputs.gitsha }}
+    - name: print logs
+      if: always()  
+      run: docker compose logs

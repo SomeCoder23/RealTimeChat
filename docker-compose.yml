@@ -1,21 +1,41 @@
-version: '3'
-services:
-  app:
-    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
-    ports:
-      - "5000:80"
-    environment:
-      - PORT=80
-      - DB_HOST=localhost  
-      - DB_USER_NAME=root 
-      - DB_PASSWORD=''  
-      - DB_NAME=chatapp
-  db:
-    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
-    environment:
-      - PORT=80
-      - DB_HOST=localhost  
-      - DB_USER_NAME=root  
-      - DB_PASSWORD='' 
-      - DB_NAME=chatapp
+version: "3"
 
+services:
+  mysql:
+    container_name: db
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=$DB_PASSWORD
+      - MYSQL_DATABASE=chatapp
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    profiles:
+      - in_docker
+    container_name: chatapp
+    build: .
+    environment:
+      - PORT=80
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=$DB_PASSWORD
+      - DB_NAME=chatapp
+    ports:
+      - "3000:80"
+    # healthcheck:
+    #   test: ["CMD", "curl", "http://localhost"]
+    #   timeout: 20s
+    #   retries: 5
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  db-data:

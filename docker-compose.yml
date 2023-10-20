@@ -1,41 +1,8 @@
-version: "3"
-
+version: '3'
 services:
-  mysql:
-    container_name: db
-    image: mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=$DB_PASSWORD
-      - MYSQL_DATABASE=chatapp
-    volumes:
-      - db-data:/var/lib/mysql
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
-  app:
-    profiles:
-      - in_docker
-    container_name: chatapp
-    build: .
-    environment:
-      - PORT=80
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=$DB_PASSWORD
-      - DB_NAME=chatapp
-    ports:
-      - "3000:80"
-    # healthcheck:
-    #   test: ["CMD", "curl", "http://localhost"]
-    #   timeout: 20s
-    #   retries: 5
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-volumes:
-  db-data:
+      - "80:80"

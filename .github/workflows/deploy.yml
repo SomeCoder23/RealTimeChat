@@ -36,3 +36,8 @@ jobs:
         host: 16.171.112.103
         user: github
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: deploy
+      run: docker compose -f docker-compose-prod.yml up -d
+      env:
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        GIT_VERSION: ${{ steps.image_version.outputs.gitsha }}

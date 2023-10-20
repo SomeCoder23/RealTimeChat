@@ -36,6 +36,3 @@ jobs:
         host: 16.171.112.103
         user: github
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-    - name: print logs
-      if: always()  
-      run: docker compose logs

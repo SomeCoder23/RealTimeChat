@@ -73,6 +73,7 @@ const updateUserProfile = async ( req: express.Request, res: express.Response, n
 const login = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
   const password = req.body.password;
+  console.log("INSIDE LOGIN....");
 
    try {
       const user = await User.findOneBy({
@@ -92,30 +93,25 @@ const login = async ( req: express.Request, res: express.Response, next: express
             expiresIn: "30m"
           }
         );
-        
         //change presences status of user.
         //user.profile.status = "online";
        // await user.save();
       // console.log("SESSION:");
-      // console.log(req.session);
-      // (req.session as any).fullName = user.profile.fullName;
-      // (req.session as any).token = token;
-      // console.log("SESSION:");
-      // console.log(req.session);
-      // console.log((req.session as any).token);
-      // res.header('Access-Control-Allow-Credentials', 'true');
-      // res.header('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
-      res.cookie('fullName', user.profile.fullName, {
+  
+      res.cookie('username', user.username, {
         httpOnly: true,
-        maxAge: 60 * 60 * 1000,
-        domain: 'http://127.0.0.1:5500', 
-        path: '/client',  
+        sameSite: 'none',
+        secure: true,
       });
       res.cookie('loginTime', Date.now(), {
-        maxAge: 60 * 60 * 1000
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.cookie('token', token, {
-        maxAge: 60 * 60 * 1000
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
       });
        res.status(200).json({ success: true, msg: "Successfully logged in!" }).send();
         
@@ -123,6 +119,7 @@ const login = async ( req: express.Request, res: express.Response, next: express
         res.status(500).json({success: false, error: "Invalid Username or password!"});
       }
     } catch (error) {
+      console.log(error);
         res.status(500).json({success: false, error: "Invalid Username or password!"});
     }
 }

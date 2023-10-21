@@ -10,24 +10,45 @@ import { Server, Socket } from "socket.io";
 import dataSource from "./db/dataSource.js";
 import { authenticate } from "./middleware/auth/authenticate.js";
 import session from "express-session";
+import path from "path";
 
 var app = express();
-app.use(express.static("client"));
+//app.use(express.static("client"));
 const PORT = 5000;
 app.use(express.json());
-app.use(
-  session({
-    secret: "sfhosjfisjfsdfnhushfy",
-    cookie: {},
-  })
-);
-
+// app.use(
+//   session({
+//     secret: "sfhosjfisjfsdfnhushfy",
+//     cookie: {},
+//   })
+// );
+//app.set('views', path.join(__dirname, 'client'));
+//app.set('view engine', 'ejs');
+app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
 app.use(cookieParser());
-app.use(cors({
-  origin: 'http://127.0.0.1:5500', 
-  credentials: true,
-}));
 const server = http.createServer(app);
+
+// Your API routes
+app.get('/setCookie', (req, res) => {
+  console.log("COOKIE BEING SET....");
+  res.cookie('myCookie3', 'cookieValue', { httpOnly: false, sameSite: 'lax' });
+ res.setHeader('Set-Cookie', 'myCookie1=exampleValue; HttpOnly');
+ res.cookie('myCookie2', 'exampleValue', { httpOnly: true });
+ res.cookie('token', 'cookieValue', {
+  httpOnly: true,
+  sameSite: 'none',
+  secure: true, 
+});
+  res.send('Cookie set successfully.');
+});
+
+app.get('/getCookie', authenticate, (req, res) => {
+  const token = req.cookies.token;
+  console.log(token);
+  res.json({ token});
+});
+
+
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -60,12 +81,13 @@ io.on("connection", (socket: Socket) => {
   });
 
   //done
-  socket.on("message", (message: string) => {
+  socket.on("message", (message: any) => {
     if (socket.data.room) {
       //.to(socket.data.room).
-      io.sockets.emit("message", {
+      io.to(socket.data.room).emit("message", {
         user: socket.data.user,
-        message: message,
+        message: message.data,
+        sentAt: message.time
       });
     } else socket.emit("error", "Not in room.");
   });
@@ -75,7 +97,7 @@ io.on("connection", (socket: Socket) => {
     socket.join(room);
     socket.data.room = room;
     console.log(`Socket joined room: ${room}`);
-    io.sockets.emit("joinedRoom", room);
+    //io.sockets.emit("joinedRoom", room);
   });
 
   socket.on("leaveRoom", () => {

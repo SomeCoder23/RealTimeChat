@@ -16,14 +16,7 @@ var app = express();
 //app.use(express.static("client"));
 const PORT = 5000;
 app.use(express.json());
-// app.use(
-//   session({
-//     secret: "sfhosjfisjfsdfnhushfy",
-//     cookie: {},
-//   })
-// );
-//app.set('views', path.join(__dirname, 'client'));
-//app.set('view engine', 'ejs');
+
 app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
 app.use(cookieParser());
 const server = http.createServer(app);

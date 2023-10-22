@@ -10,25 +10,37 @@ import { Server, Socket } from "socket.io";
 import dataSource from "./db/dataSource.js";
 import { authenticate } from "./middleware/auth/authenticate.js";
 import session from "express-session";
+import path from "path";
 
 var app = express();
-app.use(express.static("client"));
+//app.use(express.static("client"));
 const PORT = 5000;
 app.use(express.json());
-app.use(
-  session({
-    secret: "sfhosjfisjfsdfnhushfy",
-    cookie: {},
-  })
-);
 
+app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
 app.use(cookieParser());
-app.use(cors({
-  origin: 'http://127.0.0.1:5500', 
-  credentials: true,
-
-}));
 const server = http.createServer(app);
+
+// Your API routes
+app.get('/setCookie', (req, res) => {
+  console.log("COOKIE BEING SET....");
+  res.cookie('myCookie3', 'cookieValue', { httpOnly: false, sameSite: 'lax' });
+ res.setHeader('Set-Cookie', 'myCookie1=exampleValue; HttpOnly');
+ res.cookie('myCookie2', 'exampleValue', { httpOnly: true });
+ res.cookie('token', 'cookieValue', {
+  httpOnly: true,
+  sameSite: 'none',
+  secure: true, 
+});
+  res.send('Cookie set successfully.');
+});
+
+// app.get('/getCookie', authenticate, (req, res) => {
+//   const token = req.cookies.token;
+//   console.log(token);
+//   res.json({ token});
+// });
+
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -55,20 +67,30 @@ io.on("connection", (socket: Socket) => {
   //done
   socket.on("adduser", (username: string) => {
     socket.data.user = username;
-    users.push(username);
+    //users.push(username);
+    console.log("USER: " + socket.data.user);
     console.log("latest users", users);
-    io.sockets.emit("users", users);
+   // io.sockets.emit("users", users);
   });
-
   //done
-  socket.on("message", (message: string) => {
+  socket.on("message", (message: any) => {
     if (socket.data.room) {
       //.to(socket.data.room).
-      io.sockets.emit("message", {
+      const data = {
         user: socket.data.user,
-        message: message,
+        message: message.data,
+        sentAt: message.time
+      };
+      console.log(data)
+      console.log("Room: " + socket.data.room);
+      console.log("USER: " + socket.data.user);
+      io.to(socket.data.room).emit("message", {
+        user: message.sender,
+        message: message.data,
+        sentAt: message.time,
+        chat: socket.data.room
       });
-    } else socket.emit("error", "Not in room.");
+    } else { console.log("NOT IN ROOM"); socket.emit("message", "Not in room.");}
   });
 
   // done
@@ -76,7 +98,7 @@ io.on("connection", (socket: Socket) => {
     socket.join(room);
     socket.data.room = room;
     console.log(`Socket joined room: ${room}`);
-    io.sockets.emit("joinedRoom", room);
+    //io.sockets.emit("joinedRoom", room);
   });
 
   socket.on("leaveRoom", () => {

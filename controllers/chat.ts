@@ -121,8 +121,12 @@ const getChatMessages = async ( req: express.Request, res: express.Response, nex
     //format messages so to only send: sender's username, message content, and time sent
     const formatedMessages = await formatMessages(messages);
     res.status(200).json({success: true, data: formatedMessages});
+    //res.sendFile(__dirname + '/client/main.html');
   }
-  else res.status(401).json({success: false, error: 'Chat not found'});
+  else {
+    res.status(401).json({success: false, error: 'Chat not found'});
+    //res.render('chats', { err: "not found" });
+}
   
 }
 
@@ -172,7 +176,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
    
       newMsg.save().then((response) => {
         //return socket.emit('message', newMsg.content);
-        res.status(201).json({success: true, msg: "Message saved!", data: newMsg.content});
+        res.status(201).json({success: true, msg: "Message saved!", data: newMsg.content, time: newMsg.timeSent, sender: user.username});
       }).catch(error => {
         console.error(error);
         res.status(500).json({success: false, error: 'Problem Occurred'});
@@ -211,6 +215,7 @@ const leaveRoom = async ( req: express.Request, res: express.Response, next: exp
 
 const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
+  console.log("INSIDDEEE...");
   try{
         const userId = user.id;
         const results = await db.dataSource.manager.query('SELECT chatId FROM chat_participants_user WHERE userId = ?', [userId]);
@@ -223,11 +228,14 @@ const getChats = async ( req: express.Request, res: express.Response, next: expr
         });
         //leaveRoom();
         const formatedChats = chats.map(chat => formatChatInfo(chat));
+        console.log("ALMOST DONE>>>>");
         res.status(200).json({success: true, data: formatedChats});
+        //res.sendFile(__dirname + '/client/main.html');
     
       } catch(error){
         console.error(error);
         res.status(500).json({success: false, error: "Problem occurred"});
+        //res.render('chats', {err: "not found"});
 
       }
 }
@@ -439,6 +447,9 @@ const formatMessages = async (messages: Message[]) => {
   return formatedMessages;
 }
 
+const search = (query: string, data: any) => {
+
+}
 
 
 

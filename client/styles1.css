@@ -263,7 +263,8 @@ body{
     }
     .chat-app .chat-history {
         height: 300px;
-        overflow-x: auto
+        overflow-x: auto;
+        overflow-y: auto;
     }
 }
 
@@ -274,7 +275,8 @@ body{
     }
     .chat-app .chat-history {
         height: 600px;
-        overflow-x: auto
+        overflow-x: auto;
+        overflow-y: auto;
     }
 }
 
@@ -285,7 +287,8 @@ body{
     }
     .chat-app .chat-history {
         height: calc(100vh - 350px);
-        overflow-x: auto
+        overflow-x: auto;
+        overflow-y: auto;
     }
 }
 

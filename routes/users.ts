@@ -55,7 +55,7 @@ router.get('/profile', authenticate, async (req, res) =>{
     try{
       const user = res.locals.user;
       if (user) {
-        res.status(200).json({success: true, data: user.profile});
+        res.status(200).json({success: true, data: user.profile, username: user.username});
       } else {
         res.status(404).json({ success: false, error: 'User not found' });
       }

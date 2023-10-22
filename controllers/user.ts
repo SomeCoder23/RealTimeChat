@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import express from 'express';
 import { Contacts } from "../db/entities/Contacts.js";
+import "dotenv/config"
 
 const createUser = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
@@ -120,7 +121,7 @@ const login = async ( req: express.Request, res: express.Response, next: express
        res.status(200).json({ success: true, msg: "Successfully logged in!" }).send();
         
       } else {
-        res.status(500).json({success: false, error: "Invalid Username or password!"});
+        res.status(500).json({success: false, error: " :(Invalid Username or password!"});
       }
     } catch (error) {
         res.status(500).json({success: false, error: "Invalid Username or password!"});

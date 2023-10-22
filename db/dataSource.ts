@@ -4,6 +4,7 @@ import { Profile } from "./entities/Profile.js";
 import { Chat } from "./entities/Chat.js";
 import { Message } from "./entities/Message.js";
 import { Contacts } from "./entities/Contacts.js";
+import "dotenv/config";
 
 const dataSource = new DataSource({
   type: 'mysql',

@@ -35,12 +35,11 @@ app.get('/setCookie', (req, res) => {
   res.send('Cookie set successfully.');
 });
 
-app.get('/getCookie', authenticate, (req, res) => {
-  const token = req.cookies.token;
-  console.log(token);
-  res.json({ token});
-});
-
+// app.get('/getCookie', authenticate, (req, res) => {
+//   const token = req.cookies.token;
+//   console.log(token);
+//   res.json({ token});
+// });
 
 const io = new Server(server, {
   cors: {
@@ -68,21 +67,30 @@ io.on("connection", (socket: Socket) => {
   //done
   socket.on("adduser", (username: string) => {
     socket.data.user = username;
-    users.push(username);
+    //users.push(username);
+    console.log("USER: " + socket.data.user);
     console.log("latest users", users);
-    io.sockets.emit("users", users);
+   // io.sockets.emit("users", users);
   });
-
   //done
   socket.on("message", (message: any) => {
     if (socket.data.room) {
       //.to(socket.data.room).
-      io.to(socket.data.room).emit("message", {
+      const data = {
         user: socket.data.user,
         message: message.data,
         sentAt: message.time
+      };
+      console.log(data)
+      console.log("Room: " + socket.data.room);
+      console.log("USER: " + socket.data.user);
+      io.to(socket.data.room).emit("message", {
+        user: message.sender,
+        message: message.data,
+        sentAt: message.time,
+        chat: socket.data.room
       });
-    } else socket.emit("error", "Not in room.");
+    } else { console.log("NOT IN ROOM"); socket.emit("message", "Not in room.");}
   });
 
   // done

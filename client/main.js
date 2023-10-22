@@ -23,7 +23,8 @@ let user;
 
 socket.on("message", (message) => {
     //messages.push(message);
-    updateMessages(message.message);
+    if(currentChat == message.chat)
+     updateMessages(message);
 })
 
 
@@ -112,6 +113,7 @@ const getChats = () => {
                   }
                   newChat.classList.add('active');
                   chatName.innerText = chats[i].name;
+                  currentChat = chats[i].id;
                   socket.emit("joinRoom", chats[i].id);
                 });
               
@@ -193,7 +195,7 @@ function updateUsers() {
 function updateMessages(message) {
     let type;
     let align = "";
-    if(message.sender == user) type = "message my-message";
+    if(message.user == user) type = "message my-message";
     else {
         type = "message other-message float-right";
         align = "text-right";
@@ -213,9 +215,10 @@ function updateMessages(message) {
 function messageSubmitHandler(e) {
     e.preventDefault();
     console.log("SENDING MESSAGE...");
+    if(currentChat == 0) return alert("Please choose a chat.");
     let message = chatboxinput.value;
 
-    fetch(`${URL}/chat/sendMessage`, {
+    fetch(`${URL}/chat/sendMessage/${currentChat}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -235,7 +238,7 @@ function messageSubmitHandler(e) {
     .then(data => {
         console.log(data);
         if (data.success){
-            socket.emit("message", message)
+            socket.emit("message", {data: message, time: data.time, sender: data.sender})
             chatboxinput.value = ""
             return;
         }
@@ -244,7 +247,6 @@ function messageSubmitHandler(e) {
     .catch(error => {
         console.error('Error:', error);
     });
-
 
 }
 

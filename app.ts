@@ -51,7 +51,7 @@ const io = new Server(server, {
 const users: string[] = [];
 
 app.use("/users", usersRouter);
-app.use("/chat", authenticate, chatRouter);
+app.use("/chat", authenticate,chatRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Real-Time Chat App!");

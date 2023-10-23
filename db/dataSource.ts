@@ -5,7 +5,7 @@ import { Chat } from "./entities/Chat.js";
 import { Message } from "./entities/Message.js";
 import { Contacts } from "./entities/Contacts.js";
 import { UserChat } from "./entities/UserChat.js";
-
+import "dotenv/config";
 const dataSource = new DataSource({
   type: 'mysql',
   host: process.env.DB_HOST,

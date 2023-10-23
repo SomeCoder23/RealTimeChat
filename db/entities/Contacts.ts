@@ -19,10 +19,10 @@ export class Contacts extends BaseEntity {
 
     @Column({
         type: 'enum',
-        enum: ['blocked', 'muted', 'normal'],
+        enum: ['blocked', 'normal'],
         default: 'normal'
     })
-    relationshipStatus: 'blocked' | 'muted' | 'normal';
+    relationshipStatus: 'blocked' | 'normal';
 
     @CreateDateColumn({
         type: 'timestamp'/*,

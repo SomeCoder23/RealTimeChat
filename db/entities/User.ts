@@ -14,6 +14,9 @@ export class User extends BaseEntity{
     @Column({nullable: false})
     password: string;
 
+    @Column({length: 50, nullable: false})
+    email: string;
+
     @Column({
       type: 'date'/*,
       default: () => 'CURRENT_DATE',*/
@@ -24,8 +27,9 @@ export class User extends BaseEntity{
     @JoinColumn()
     profile: Profile;
 
-    @ManyToMany(() => Chat, chat => chat.participants)
-    chats: Chat[];
+
+    // @ManyToMany(() => Chat, chat => chat.participants)
+    // chats: Chat[];
 
     // @OneToMany(() => Contacts, contact => contact.user, {cascade: true})
     // contacts: Contacts[];

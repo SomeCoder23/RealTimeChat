@@ -119,7 +119,8 @@ body{
 
 .chat .chat-header .chat-about {
     float: left;
-    padding-left: 10px
+    padding-left: 10px;
+    color: #505c68;
 }
 
 .chat .chat-history {
@@ -304,3 +305,11 @@ body{
 }
 
 
+.center-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Ensures full viewport height */
+    color: slategrey;
+  }

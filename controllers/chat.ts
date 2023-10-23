@@ -3,11 +3,12 @@ import ioClient from 'socket.io-client';
 import { Message } from "../db/entities/Message.js";
 import { User } from "../db/entities/User.js";
 import { Chat } from "../db/entities/Chat.js";
-import { In, MoreThan } from "typeorm";
+import { ILike, In, Like, MoreThan } from "typeorm";
 import db from '../db/dataSource.js';
 import { Contacts } from "../db/entities/Contacts.js";
 //const socket = ioClient('http://localhost:5000');
-import express from 'express';
+import express, { response } from 'express';
+import { UserChat } from "../db/entities/UserChat.js";
 
 //NOTE: when creating a one-to-one chat should i add the users to each others contacts if not added already????
 const createChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -15,6 +16,7 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
   let chatName, desc;
   let participants;
   let type = "1to1";
+  let userChats :UserChat[] = [];
   const currentTime = new Date();
 
   try {
@@ -35,6 +37,14 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
           return;
         }
         participants = users;
+        participants.push(currentUser);
+        for(let i = 0; i < participants.length; i++){
+          const userChat = await UserChat.create({
+            name: chatName,
+            user: participants[i],
+          });
+          userChats.push(userChat);
+        }
 
       } catch(err){
         console.log(err);
@@ -44,22 +54,29 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
     } else {
       //if its ont-to-one chat
       const username = req.params.username;
-      const user = await User.findOneBy({ username });
+      const user:any = await User.findOneBy({ username });
       if (user) {
         //check if there already exits a chat.
-        const chat = await Chat.find({where: {
-          type: "1To1",
-          participants: [currentUser, user]
-        }})
-        if(chat){
-          res.status(409).json({success: false, error: "Chat already exists", data: chat});
+        const chats1 = await UserChat.find({where: {user: currentUser}})
+        const filteredChats = chats1.filter(chat => {if (chat.chat.type === "1To1" && chat.name === user.username) return chat;});
+        // let chats2 = await UserChat.find({where: {user: user, chat: In(filteredChats)}})
+         if(filteredChats.length > 0){
+          res.status(409).json({success: false, error: "Chat already exists", data: filteredChats});
           return;
         }
-        console.log("User " + user.profile.fullName + " found!!");
+
         participants = [user];
         desc = "A one-to-one chat";
-        chatName = user.username;
-
+        //chatName = user.username;
+        const user1 = await UserChat.create({
+          user: user,
+          name: currentUser.username
+        });
+        const user2 = await UserChat.create({
+          user: currentUser,
+          name: user.username
+        });
+        userChats.push(user1, user2);
         //adds to contact....maybe should have its own endpoint?
       //   try {
       //     // addContact(currentUser , user.username);
@@ -76,24 +93,23 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
       }
     }
 
-    participants.push(currentUser);
     const newChat = Chat.create({
-      name: chatName,
+      //name: chatName,
       description: desc,
       createdAt: currentTime,
-      participants: participants,
       type: type == "group" ? "group" : "1To1"
     });
 
+    
+
     try {
-      newChat.save().then((response) => {
-        console.log("Chat created :)");
-        //socket.emit("joinRoom", response.id);
-        res.status(201).json({success: true, msg: "Created chat successfully!", data: response});
-      }).catch(error => {
-        console.error(error);
-        res.status(500).json({success: false, error: 'Problem Occurred'});
-        return;
+      db.dataSource.manager.transaction(async (transaction) => {
+        await transaction.save(newChat);
+        for(let i = 0; i < userChats.length; i++){
+        userChats[i].chat = newChat;
+        await transaction.save(userChats[i]);
+      }
+      res.status(201).json({success: true, msg: "Created chat successfully!", data: response});
       });
 
     } catch (error) {
@@ -135,9 +151,16 @@ const getGroupInfo = async ( req: express.Request, res: express.Response, next: 
   const id = Number(req.params.chatId);
   const user = res.locals.user;
 
-  const group = await validate(id, user);
-  if(group && group?.type === 'group'){
-    res.status(200).json({success: true, data: formatChatInfo(group)});
+  const group: any = await validate(id, user);
+  if(group /*&& group.chat.type === 'group'*/){
+    // const userChat = await UserChat.find({
+    //   where: {
+    //     chat: group,
+    //     user: user
+    //   }
+    // });
+    const chatInfo = await formatChatInfo(group, user);
+    res.status(200).json({success: true, data: chatInfo});
   } else 
      res.status(400).json({success: false, error: 'Group not found'});
 
@@ -150,7 +173,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
   let message = req.body.content;
 
   //checks if chat exists 
-  const chat = await validate(id, user);
+  const chat:any = await validate(id, user);
   if(chat){
     const currentTime = new Date(); 
 
@@ -167,26 +190,43 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
     const newMsg = Message.create({
       content: message,
       timeSent: currentTime,
-      chat_id: id,
+      chat_id: chat.chat.id,
       type: type.toLowerCase() === 'attachment' ? "attachment" : "text",
       sender: user.id
     }); 
     
-    //then sends message
-   
-      newMsg.save().then((response) => {
-        //return socket.emit('message', newMsg.content);
-        res.status(201).json({success: true, msg: "Message saved!", data: newMsg.content, time: newMsg.timeSent, sender: user.username});
-      }).catch(error => {
-        console.error(error);
-        res.status(500).json({success: false, error: 'Problem Occurred'});
-      });   
+    try {
+      db.dataSource.manager.transaction(async (transaction) => {
+        await transaction.save(newMsg);
+        const userChats = await UserChat.find({where: {chat: chat.chat}});
+        console.log(userChats.length);
+        console.log(userChats);
+        //only add message to users who haven't blocked the chat
+        const updatedUserChats = [];
+        for(let i = 0; i < userChats.length; i++){
+          if(userChats[i].status != "blocked"){
+            console.log("Adding message to: ", userChats[i].user.username)
+            userChats[i].messages.push(newMsg);
+            updatedUserChats.push(userChats[i]);
+           // await transaction.save(userChats[i])
+          }      
+        }
+        await transaction.save(updatedUserChats);
+        const formatedMsg = {message: newMsg.content, time: newMsg.timeSent, sender: user.username};
+      res.status(201).json({success: true, msg: "Created message successfully!", data: formatedMsg});
+      });
 
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({success: false, error: 'Problem Occurred'});
+      return;
+    }
+  
   } else res.status(400).json({success: false, error: "Chat not found."});
 
 }
 
-//NOTE: clears chat for all participants. Should fix that...maybe..
+
 const clearChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id = Number(req.params.chatId);
   const user = res.locals.user;
@@ -217,25 +257,19 @@ const getChats = async ( req: express.Request, res: express.Response, next: expr
   const user = res.locals.user;
   console.log("INSIDDEEE...");
   try{
-        const userId = user.id;
-        const results = await db.dataSource.manager.query('SELECT chatId FROM chat_participants_user WHERE userId = ?', [userId]);
-        const chatIds = results.map((row : any) => row.chatId);
-    
-        const chats = await Chat.find({
-          where: {
-            id: In(chatIds),
-          },
-        });
-        //leaveRoom();
-        const formatedChats = chats.map(chat => formatChatInfo(chat));
-        console.log("ALMOST DONE>>>>");
-        res.status(200).json({success: true, data: formatedChats});
-        //res.sendFile(__dirname + '/client/main.html');
+        const userChats = await UserChat.find({where: {user: user}});
+        if(userChats){
+        
+        let formatedChats = [];
+        for(let i = 0; i < userChats.length; i++){
+          const chatty = await formatChatInfo(userChats[i], user);
+          formatedChats.push(chatty);
+        }
+        res.status(200).json({success: true, totalChats: formatedChats.length, data: formatedChats});}
     
       } catch(error){
         console.error(error);
         res.status(500).json({success: false, error: "Problem occurred"});
-        //res.render('chats', {err: "not found"});
 
       }
 }
@@ -257,27 +291,31 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
   const id = Number(req.body.chatID);
   const username = req.body.username;
 
-  const chat = await validate(id, user);
+  const chat:any = await validate(id, user);
   //ONLY add participants to group chat
-  if(chat && chat.type == "group"){
-    const newUser = await User.findOneBy({username});
-    if(newUser){
-      //checks if user already a participant, if so send an error message
-      const userAdded = chat.participants.filter(p => p.id === newUser.id);
-      if(userAdded.length >= 1){
-        res.status(400).json({success: false, error: "Participant already added to group"});
-        return;
-      }
-      chat.participants.push(newUser);
-      chat.save().then(response => {
+  if(chat && chat.chat.type == "group"){
+    const newUser:any = await User.findOneBy({username});
+    if(!newUser) {
+      res.status(400).json({success: false, error: "Invalid participant username."});
+      return;
+    }
+    //checks if user already a participant, if so send an error message
+    const exists = await UserChat.findOne({where: {user: newUser, chat: chat.chat}})
+    if(exists){
+      res.status(400).json({success: false, error: "Participant already added to group"}); 
+      return;
+    }
+    const newParticipant = await UserChat.create({
+      name : chat.name,
+      user: newUser,
+      chat: chat.chat
+    })
+      newParticipant.save().then(response => {
       res.status(200).json({success: true, data: response, msg: `${username} added successfully.`});
     }).catch(error => {
       console.log(error);
       res.status(500).json({success: false, error: "Problem occurred"});
     })
-  } else res.status(400).json({success: false, error: "Invalid participant username."});
-
-
   } else res.status(400).json({success: false, error: "Chat not found"});
 }
 
@@ -288,24 +326,17 @@ const removeParticipant = async ( req: express.Request, res: express.Response, n
   const username = req.body.username;
 
   const chat = await validate(id, user);
-  if(chat  && chat.type == "group"){
+  if(chat  && chat.chat.type == "group"){
     const oldUser = await User.findOneBy({username});
     if(oldUser){
-      //filter out the participant
-      const participants = chat.participants.filter(p => p.id !== oldUser.id);
-      //check if they were even a participant, return if they weren't
-      if(chat.participants.length === participants.length){
-        res.status(400).json({success: false, error: "Participant isn't even in the group."});
-        return;
-      }
-      
-      chat.participants = participants;
-      chat.save().then(response => {
+      const userChat = await validate(id, oldUser);
+      if(userChat){
+        await userChat.remove();
         res.status(201).json({success: true, msg: `${username} removed successfully`, data: response});
-      }).catch(error => {
-        console.log(error);
-        res.status(500).json({success: false, error: "Problem occurred"});
-      })
+      } else {
+          res.status(400).json({success: false, error: "Participant isn't even in the group."});
+          return;
+      }
     } else res.status(400).json({success: false, error: "Participant username invalid"});
 
   } else res.status(400).json({success: false, error: "Chat or participant invalid"});
@@ -388,7 +419,7 @@ const changeFriendStatus = async ( req: express.Request, res: express.Response, 
     if(relationship[0]){
     switch(status.toLowerCase()){
       case 'b': case 'block': case 'blocked': relationship[0].relationshipStatus = "blocked"; break;
-      case 'm': case 'mute': case 'muted': relationship[0].relationshipStatus = "muted"; break;
+     // case 'm': case 'mute': case 'muted': relationship[0].relationshipStatus = "muted"; break;
       default: relationship[0].relationshipStatus = "normal";
     }
 
@@ -407,36 +438,123 @@ const changeFriendStatus = async ( req: express.Request, res: express.Response, 
 
 }
 
+const changeChatStatus = async ( req: express.Request, res: express.Response, next: express.NextFunction) =>{
+  const status = req.body.status;
+  const chat = Number(req.body.chatID);
+  const user = res.locals.user;
+
+  const userChat = await validate(chat, user);
+  if(userChat){
+
+    
+    switch(status.toLowerCase()){
+      case 'b': case 'block': case 'blocked': userChat.status = "blocked"; break;
+      case 'm': case 'mute': case 'muted': userChat.status = "muted"; break;
+      default: userChat.status = "normal";
+    }
+
+    userChat.save().then((response) => {
+      res.status(201).json({success: true, msg: "Status updated successfully!", data: userChat});
+    }).catch(error => {
+      console.error(error);
+      res.status(500).json({success: false, error: 'Problem occurred'});
+    });
+
+  } else{
+    res.status(401).json({success: false, error: 'Other user not found.'});
+  }
+
+}
+
+const searchUsers =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const query = req.params.query;
+  const users = await User.find({
+    where: {username: ILike(`%${query}`)}
+  });
+
+  if(users){
+    res.status(200).json({success: true, data: users})
+  }
+  else {
+    res.status(500).json({success: false, error: "Problemo occurred."})
+  }
+}
+
+const searchChats =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const query = req.params.query;
+  const user = res.locals.user;
+  const chats = await UserChat.find({
+    where: {name: ILike(`%${query}`), user: user}
+  });
+
+  if(chats){
+    res.status(200).json({success: true, data: chats})
+  }
+  else {
+    res.status(500).json({success: false, error: "Problemo occurred."})
+  }
+}
+
+const searchMessages =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const query = req.body.query;
+  const chat = Number(req.body.chatID);
+  const user = res.locals.user;
+  const valid = await validate(chat, user);
+  if(valid){
+  const messages = await Message.find({
+    where: {content: ILike(`%${query}`), chat_id: chat}
+  });
+
+  if(messages){
+    res.status(200).json({success: true, data: messages})
+  }
+  else {
+    res.status(500).json({success: false, error: "Problemo occurred."})
+  }
+}
+else res.status(400).json({success: false, error: "Invalid chat."})
+
+}
 
 // const leaveRoom = () => {
 //   return socket.emit("leaveRoom");
 // }
 
 //checks if chat exists and user is a participant
-const validate = async (id: number, user: User) => {
+const validate = async (id: number, user: any) => {
   //checks if chat exists 
-  const chat = await Chat.findOneBy({id});
+  const chat: any = await Chat.findOneBy({id});
   if(chat){
+  const userChat = await UserChat.findOne({where: {chat: chat, user: user}});
+  if(userChat){
     //then checks if current user is a participant
-    for (const participant of chat.participants){
-      if(participant.id == user.id)
-        return chat
-    } 
-  }
+    // for (const participant of chat.participants){
+    //   if(participant.id == user.id)
+        return userChat;
+    //} 
+  }}
   return false; 
 }
 
-const formatChatInfo = (chat: Chat) => {
-  const usernames = chat.participants.map((user) => user.username);
+const formatChatInfo = async (chat: any, user: User) => {
+ // const usernames = chat.participants.map((user) => user.username);
+ const users = await UserChat.find({where: {chat: chat.chat}})
+ const usernames = users.map(user => user.user.username);
+ console.log("USERNAMES: ");
+ console.log(usernames);
+ const presenceStatus = users.map(userChat => {if(userChat.user != user) return userChat.user.profile.status;})
+ const isOnline = presenceStatus.filter(status => status == "online");
   return {
-    id: chat.id,
+    id: chat.chat.id,
     name: chat.name,
-    description: chat.description,
+    description: chat.chat.description,
+    status: isOnline.length > 0? "online": "offline",
     totalParticipants: usernames.length, 
-    createdAt: chat.createdAt,
+    createdAt: chat.chat.createdAt,
     participants: usernames
-  }
+  };
 }
+
 
 const formatMessages = async (messages: Message[]) => {
   const senders : any = messages.map(message => message.sender);
@@ -466,5 +584,9 @@ export {
   addParticipant,
   removeParticipant,
   deleteMessage,
-  addContact
+  addContact,
+  searchUsers,
+  searchMessages,
+  searchChats,
+  changeChatStatus
 };

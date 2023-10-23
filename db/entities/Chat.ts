@@ -7,8 +7,8 @@ export class Chat extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ length: 100, nullable: true, default: "Unknown101"})
-  name: string;
+  // @Column({ length: 100, nullable: true, default: "Unknown101"})
+  // name: string;
 
   @Column({ length: 255, nullable: true, default: "Some chat room...have fun chatting :)"})
   description: string;
@@ -27,12 +27,12 @@ export class Chat extends BaseEntity {
   })
   createdAt: Date;
 
-  @ManyToMany(() => User, {eager: true,  cascade: true })
-  @JoinTable()
-  participants: User[];
+  // @ManyToMany(() => User, {eager: true,  cascade: true })
+  // @JoinTable()
+  // participants: User[];
 
-  @OneToMany(() => Message, messages => messages.chat_id, {eager: true, nullable: true})
-  messages: Message[];
+  // @OneToMany(() => Message, messages => messages.chat_id, {eager: true, nullable: true})
+  // messages: Message[];
 
 
 }

@@ -9,6 +9,7 @@ import "dotenv/config"
 
 const createUser = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
+  const email = req.body.email;
   const user = await User.findOneBy({username});
   if(user){
     res.status(400).json({success: false, error: "Username already in use."});
@@ -33,6 +34,7 @@ const createUser = async ( req: express.Request, res: express.Response, next: ex
           const newUser = User.create({
             username: username,
             password: hashedPassword,
+            email: email,
             createdAt: currentDate,
             profile: profile
           });
@@ -248,6 +250,20 @@ const getUsers = async ( req: any, res: express.Response, next: express.NextFunc
   }
 }
 
+const changeStatus = async (status: string, username: string) => {
+  try { const user = await User.findOneBy({username});
+  if(user){
+   if(status == "online")
+      user.profile.status = "online";
+    else user.profile.status = "offline";
+
+    await user.save();}
+  } catch(err){
+    console.log(err);
+  }
+
+}
+
 const formatContacts = async (contacts: Contacts[]) => {
   const people = contacts.map(contact => contact.contact);
   let formatedContacts = [];
@@ -266,5 +282,6 @@ export {
   changePassword,
   deleteAccount,
   getContacts,
-  getUsers
+  getUsers,
+  changeStatus
 };

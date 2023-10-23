@@ -11,6 +11,7 @@ import dataSource from "./db/dataSource.js";
 import { authenticate } from "./middleware/auth/authenticate.js";
 import session from "express-session";
 import path from "path";
+import { changeStatus } from "./controllers/user.js";
 
 var app = express();
 //app.use(express.static("client"));
@@ -68,16 +69,21 @@ io.on("connection", (socket: Socket) => {
   socket.on("adduser", (username: string) => {
     socket.data.user = username;
     //users.push(username);
+    changeStatus("online", username);
     console.log("USER: " + socket.data.user);
     console.log("latest users", users);
    // io.sockets.emit("users", users);
   });
+
+  socket.on("removeUser", (username: string) => {
+    changeStatus("offline", username);
+  })
   //done
   socket.on("message", (message: any) => {
     if (socket.data.room) {
       //.to(socket.data.room).
       const data = {
-        user: socket.data.user,
+        user: message.sender,
         message: message.data,
         sentAt: message.time
       };
@@ -110,13 +116,13 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("disconnect", () => {
     console.log("deleting ", socket.data.user);
-
-    if (socket.data.user) {
-      const index = users.indexOf(socket.data.user);
-      if (index !== -1) {
-        users.splice(index, 1);
-      }
-    }
+    if(socket.data.user) changeStatus("offline", socket.data.user);
+    // if (socket.data.user) {
+    //   const index = users.indexOf(socket.data.user);
+    //   if (index !== -1) {
+    //     users.splice(index, 1);
+    //   }
+    // }
 
     io.sockets.emit("users", users);
     console.log("remaining users: ", users);

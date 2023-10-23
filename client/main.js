@@ -5,6 +5,7 @@ const messageList = document.getElementById("messages");
 const chatboxinput = document.getElementById("input")
 const chatName = document.getElementById("name")
 const username = document.getElementById("username")
+const body = document.getElementById("body")
 
 
 const usernameInput = document.getElementById("username");
@@ -39,7 +40,7 @@ const getCookie = (name) => {
 }
 
 
-if(username){
+if(username != null){
     fetch(`${URL}/users/profile`, {
         method: 'GET',
         headers: {
@@ -51,7 +52,9 @@ if(username){
         console.log("RESPONSE:");
         console.log(response);
         if (!response.ok) {
-            return alert("A Problem Occured");
+            //return alert("A Problem Occured");
+            username.innerText = "Loading...";
+            return;
         } 
 
         return response.json();
@@ -63,10 +66,11 @@ if(username){
             username.innerText = user;
             return;
         }
-        else return alert(data.error);
+        else return username.innerText = "Loading";
     })
     .catch(error => {
-        console.error("somethign went wrongoo");
+        //console.error("somethign went wrongoo");
+        username.innerText = "Loading";
         //return alert("Something went wrong :(");
     });
 }
@@ -83,6 +87,10 @@ const getChats = () => {
     .then(response => {
         console.log("RESPONSE:");
         console.log(response);
+        if(response.status == 401){
+            window.location.href = "/client/login.html";   
+            return;
+        }
         if (!response.ok) {
             return alert("A Problem Occured");
         } 
@@ -92,15 +100,18 @@ const getChats = () => {
     .then(data => {
         console.log(data);
         if (data.success){
+            let status;
             const chats = data.data;
             for (let i = 0; i < chats.length; i++) {
+                if(chats.status == "online") status = "online";
+                else status = "offline";
                 let newChat = document.createElement("li");
                 newChat.classList.add("clearfix");
                 newChat.innerHTML = `
                   <img src="images/defaultIcon.png" alt="avatar">
                   <div class="about">
                     <div class="name">${chats[i].name}</div>
-                    <div class="status"> <i class="fa fa-circle offline"></i> offline </div>                                            
+                    <div class="status"> <i class="fa fa-circle ${status}"></i> offline </div>                                            
                   </div>`;
               
                 newChat.addEventListener('click', () => {
@@ -238,7 +249,8 @@ function messageSubmitHandler(e) {
     .then(data => {
         console.log(data);
         if (data.success){
-            socket.emit("message", {data: message, time: data.time, sender: data.sender})
+            console.log(data.data);
+            socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender})
             chatboxinput.value = ""
             return;
         }

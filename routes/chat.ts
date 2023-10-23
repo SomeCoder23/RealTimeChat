@@ -12,6 +12,10 @@ import {
   deleteMessage,
   addContact,
   getHistory,
+  searchUsers,
+  searchMessages,
+  searchChats,
+  changeChatStatus
 } from "../controllers/chat.js";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -45,21 +49,25 @@ router.post("/start_chat/:username", createChat);
 router.post("/add_participant", addParticipant);
 router.post("/remove_participant", removeParticipant);
 router.post("/clear_chat/:chatId", clearChat);
+
 //router.post('/addContact/:username', addContact);
 //removes self permenantly from chat....
 router.post("/leave_chat/:chatId", leaveRoom);
+router.post("/searchUsers/:query", searchUsers);
+router.post("/search", searchMessages);
+router.post("/searchChats/:query", searchChats);
 
 //GET ROUTES
 
 //not started*********************************
 router.get("/", getChats);
-router.get("/search", (req, res) => {
-  //searches a specific chat for the text specified in the body
-});
-router.get("/groupInfo/:chatId", getGroupInfo);
+router.get("/chatInfo/:chatId", getGroupInfo);
 router.get("/conversations", getChats);
 router.get("/getMessages/:chatId", getChatMessages);
 router.get("/history/:chatId", getHistory);
+
+//PUT ROUTES
+router.put("/changeStatus", changeChatStatus);
 
 //DELETE ROUTES
 router.delete("/delete_message/:messageId", deleteMessage);

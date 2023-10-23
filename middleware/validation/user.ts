@@ -4,7 +4,7 @@ const validateUser = (req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const values = ['fullName', 'username', 'password', 'birthday'];
+  const values = ['fullName', 'username', 'password', 'birthday', 'email'];
   const user = req.body;
   const errorList: string[] = [];
 

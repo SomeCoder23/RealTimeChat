@@ -4,8 +4,8 @@ import { Profile } from "./entities/Profile.js";
 import { Chat } from "./entities/Chat.js";
 import { Message } from "./entities/Message.js";
 import { Contacts } from "./entities/Contacts.js";
+import { UserChat } from "./entities/UserChat.js";
 import "dotenv/config";
-
 const dataSource = new DataSource({
   type: 'mysql',
   host: process.env.DB_HOST,
@@ -13,7 +13,7 @@ const dataSource = new DataSource({
   username: process.env.DB_USER_NAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User, Chat, Message, Profile, Contacts],
+  entities: [User, Chat, Message, Profile, Contacts, UserChat],
   synchronize: true,
   //logging: true
 });

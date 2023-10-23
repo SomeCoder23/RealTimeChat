@@ -1,6 +1,7 @@
-import { BaseEntity, BeforeRemove, Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, BeforeRemove, Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User.js";
 import { Chat } from "./Chat.js";
+import { UserChat } from "./UserChat.js";
 
 @Entity()
 export class Message extends BaseEntity {
@@ -24,8 +25,11 @@ export class Message extends BaseEntity {
   @ManyToOne(() => User, {eager: true, onDelete: 'SET NULL'})
   sender: string;
 
-  @ManyToOne(() => Chat, chat => chat.messages, {nullable: true})
+  @ManyToOne(() => Chat)
   chat_id: number;
+
+  @ManyToMany(() => UserChat, (userChat) => userChat.messages)
+  userChats: UserChat[];
 
   @BeforeRemove()
   private async beforeRemove() {

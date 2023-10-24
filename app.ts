@@ -71,14 +71,18 @@ io.on("connection", (socket: Socket) => {
   socket.on("adduser", (username: string) => {
     socket.data.user = username;
     //users.push(username);
-    changeStatus("online", username);
+    //changeStatus("online", username);
     console.log("USER: " + socket.data.user);
-    console.log("latest users", users);
    // io.sockets.emit("users", users);
   });
 
-  socket.on("removeUser", (username: string) => {
-    changeStatus("offline", username);
+  socket.on("online", async (username: string) => {
+    console.log("about to change status...");
+    await changeStatus("online", username);
+  })
+
+  socket.on("offline", async (username: string) => {
+    await changeStatus("offline", username);
   })
   //done
   socket.on("message", (message: any) => {

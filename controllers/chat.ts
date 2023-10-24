@@ -207,6 +207,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
           if(userChats[i].status != "blocked"){
             console.log("Adding message to: ", userChats[i].user.username)
             userChats[i].messages.push(newMsg);
+            userChats[i].lastEntry = newMsg.timeSent;
             updatedUserChats.push(userChats[i]);
            // await transaction.save(userChats[i])
           }      
@@ -257,7 +258,9 @@ const getChats = async ( req: express.Request, res: express.Response, next: expr
   const user = res.locals.user;
   console.log("INSIDDEEE...");
   try{
-        const userChats = await UserChat.find({where: {user: user}});
+        const userChats = await UserChat.find({where: {user: user}, order: {
+          lastEntry: "DESC" 
+        }});
         if(userChats){
         
         let formatedChats = [];
@@ -502,11 +505,11 @@ const searchMessages =  async ( req: express.Request, res: express.Response, nex
   const valid = await validate(chat, user);
   if(valid){
   const messages = await Message.find({
-    where: {content: ILike(`%${query}`), chat_id: chat}
+    where: {content: ILike(`%${query}%`), chat_id: chat}
   });
-
+  const formatedMessages = await formatMessages(messages);
   if(messages){
-    res.status(200).json({success: true, data: messages})
+    res.status(200).json({success: true, data: formatedMessages})
   }
   else {
     res.status(500).json({success: false, error: "Problemo occurred."})
@@ -543,8 +546,10 @@ const formatChatInfo = async (chat: any, user: User) => {
  console.log("USERNAMES: ");
  console.log(usernames);
  const presenceStatus = users.map(userChat => {if(userChat.user != user) return userChat.user.profile.status;})
+ console.log(presenceStatus);
  const isOnline = presenceStatus.filter(status => status == "online");
-  return {
+ console.log("IS ONLINE? " + isOnline);
+ return {
     id: chat.chat.id,
     name: chat.name,
     description: chat.chat.description,

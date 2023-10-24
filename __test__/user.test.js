@@ -57,7 +57,8 @@ describe("register process", () => {
        fullName : "roaa shaheen",
        username:"rorooo",
        password:"123456",
-       birthday: "2003-08-10"
+       birthday: "2003-08-10",
+       email: "test@gmail.com"
     };
 
     const response = await  request(app).post("/users/register").send(user);
@@ -72,7 +73,8 @@ describe("register process", () => {
        fullName : "roaa shaheen",
        username:"rorooo",
        password:"123456",
-       birthday: "2003-08-10"
+       birthday: "2003-08-10",
+       email: "test@gmail.com"
     };
 
     const response = await  request(app).post("/chat/create_group").send(user);

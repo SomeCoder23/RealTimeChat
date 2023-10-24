@@ -6,6 +6,10 @@ const chatboxinput = document.getElementById("input")
 const chatName = document.getElementById("name")
 const username = document.getElementById("username")
 const body = document.getElementById("body")
+const title1 = document.getElementById("title1")
+const title2 = document.getElementById("title2")
+const topHeading = document.getElementById("top")
+const bottom = document.getElementById("bottom")
 
 
 const usernameInput = document.getElementById("username");
@@ -17,8 +21,9 @@ const logout = document.getElementById("logout");
 const URL = 'http://www.localhost:5000';
 const socket = io(URL);
 
-let users = [];
-let messages = []
+//let users = [];
+//let messages = []
+let orderedChats = [];
 let currentChat = 0;
 let user;
 
@@ -35,12 +40,9 @@ socket.on('users', function (_users) {
     // updateUsers();
 });
 
-const getCookie = (name) => {
-    document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
-}
 
-
-if(username != null){
+const getProfile = () => {
+    if(username !== null){
     fetch(`${URL}/users/profile`, {
         method: 'GET',
         headers: {
@@ -73,7 +75,7 @@ if(username != null){
         username.innerText = "Loading";
         //return alert("Something went wrong :(");
     });
-}
+}}
 
 const getChats = () => {
     console.log("Getting chats...");
@@ -102,8 +104,14 @@ const getChats = () => {
         if (data.success){
             let status;
             const chats = data.data;
+            if(chats.length < 1) {
+                title1.style.display = "flex";
+                return;
+            }
+            else title1.style.display = "none";
             for (let i = 0; i < chats.length; i++) {
-                if(chats.status == "online") status = "online";
+                console.log(chats[i].name + " status: " + chats[i].status);
+                if(chats[i].status == "online") status = "online";
                 else status = "offline";
                 let newChat = document.createElement("li");
                 newChat.classList.add("clearfix");
@@ -111,12 +119,17 @@ const getChats = () => {
                   <img src="images/defaultIcon.png" alt="avatar">
                   <div class="about">
                     <div class="name">${chats[i].name}</div>
-                    <div class="status"> <i class="fa fa-circle ${status}"></i> offline </div>                                            
+                    <div class="status"> <i class="fa fa-circle ${status}"></i> ${status} </div>                                            
                   </div>`;
               
                 newChat.addEventListener('click', () => {
                   getMessages(chats[i].id);
-                  
+                  if(title2.style.display != "none") {
+                    console.log("changing appearance.......");
+                    title2.style.display = "none";
+                    topHeading.style.display = "flex";
+                    bottom.style.display = "block";
+                  }
                   // Remove the "active" class from previously clicked chat
                   const activeChat = document.querySelector('.clearfix.active');
                   if (activeChat) {
@@ -136,7 +149,7 @@ const getChats = () => {
     })
     .catch(error => {
         console.error('Error:', error);
-        return alert("Something went wrong :(");
+        //return alert("Something went wrong :(");
     });
 
 }
@@ -310,6 +323,15 @@ function loginHandler(e) {
             });
 }
 
+const userOffline = () => {
+    socket.emit("offline", user);
+}
+
+const userOnline = () => {
+    if(user)
+        socket.emit("online", user);
+}
+
 if(logout){
     logout.addEventListener('click', () => {
         fetch(`${URL}/users/logout`, {
@@ -343,8 +365,16 @@ if(logout){
     })
 }
 
-if(sendMsg){
+if(sendMsg){    
+    // window.addEventListener('blur', () => {
+    //     setTimeout(userOffline, 60000);
+    //   });
+    window.addEventListener('focus', userOnline);
+    window.addEventListener('blur', userOffline);
     getChats();
+    getProfile();
+    //window.addEventListener('load', getChats());
+    //window.addEventListener('load', getProfile());
     sendMsg.addEventListener('click', messageSubmitHandler);
 }
 

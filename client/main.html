@@ -41,9 +41,9 @@
             <div id="plist" class="people-list">
                 <div class="input-group">
                     <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-search"></i></span>
+                        <span class="input-group-text" id="searchBtn1"><i class="fa fa-search"></i></span>
                     </div>
-                    <input type="text" class="form-control" placeholder="Search...">
+                    <input type="text" class="form-control" placeholder="Search..." id="searchChats">
                 </div>
                 <ul class="list-unstyled chat-list mt-2 mb-0" id="chats">                                               
                 </ul>
@@ -60,13 +60,20 @@
                             </a>
                             <div class="chat-about">
                                 <h6 class="m-b-0" id ="name">Chats</h6>
+                                <br> 
+                            </div>
+                            <div class="input-group" style="display:none;" id="searchBlock">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="searchBtn3"><i class="fa fa-search"></i></span>
+                                </div>
+                                <input type="text" class="form-control" placeholder="Search..." id="msgSearch">
                             </div>
                         </div>
                         <div class="col-lg-6 hidden-sm text-right">
                            <!-- <a href="javascript:void(0);" class="btn btn-outline-secondary"><i class="fa fa-info"></i></a>-->
-                            <a href="javascript:void(0);" class="btn btn-outline-primary"><i class="fa fa-image"></i></a>
-                            <a href="javascript:void(0);" class="btn btn-outline-info"><i class="fa fa-paperclip"></i></a>
-                           <!-- <a href="javascript:void(0);" class="btn btn-outline-warning"><i class="fa fa-question"></i></a> -->
+                           <a href="javascript:void(0);" class="btn btn-outline-warning" id="searchBtn2"><i class="fa fa-search"></i></a> 
+                            <a href="javascript:void(0);" class="btn btn-outline-primary" id="imgBtn"><i class="fa fa-image"></i></a>
+                            <a href="javascript:void(0);" class="btn btn-outline-info" id="fileBtn"><i class="fa fa-paperclip"></i></a>
                         </div>
                     </div>
                 </div>

@@ -10,8 +10,9 @@ const title1 = document.getElementById("title1")
 const title2 = document.getElementById("title2")
 const topHeading = document.getElementById("top")
 const bottom = document.getElementById("bottom")
-
-
+const msgSearch = document.getElementById("msgSearch")
+const chatsSearch = document.getElementById("searchChats")
+const searchBtn = document.getElementById("searchBtn2")
 const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 const login = document.getElementById("login-form");
@@ -22,10 +23,12 @@ const URL = 'http://www.localhost:5000';
 const socket = io(URL);
 
 //let users = [];
-//let messages = []
+let allMessages = []
 let orderedChats = [];
 let currentChat = 0;
 let user;
+let searching = false;
+
 
 socket.on("message", (message) => {
     //messages.push(message);
@@ -77,6 +80,72 @@ const getProfile = () => {
     });
 }}
 
+const updateChats = (chats) => {
+    chatList.innerHTML = "";
+    let status;
+    if(chats.length < 1) {
+        title1.style.display = "flex";
+        return;
+    }
+    else title1.style.display = "none";
+    for (let i = 0; i < chats.length; i++) {
+        console.log(chats[i].name + " status: " + chats[i].status);
+        if(chats[i].status == "online") status = "online";
+        else status = "offline";
+        let newChat = document.createElement("li");
+        newChat.classList.add("clearfix");
+        newChat.innerHTML = `
+          <img src="images/defaultIcon.png" alt="avatar">
+          <div class="about">
+            <div class="name">${chats[i].name}</div>
+            <div class="status"> <i class="fa fa-circle ${status}"></i> ${status} </div>                                            
+          </div>`;
+      
+        newChat.addEventListener('click', () => {
+          getMessages(chats[i].id);
+          if(title2.style.display != "none") {
+            console.log("changing appearance.......");
+            title2.style.display = "none";
+            topHeading.style.display = "flex";
+            bottom.style.display = "block";
+          }
+          // Remove the "active" class from previously clicked chat
+          const activeChat = document.querySelector('.clearfix.active');
+          if (activeChat) {
+            activeChat.classList.remove('active');
+          }
+          newChat.classList.add('active');
+          chatName.innerText = chats[i].name;
+          currentChat = chats[i].id;
+          socket.emit("joinRoom", chats[i].id);
+        });
+      
+        chatList.append(newChat);
+      }
+}
+
+const updateChatMessages = (messages) => {
+    messageList.innerHTML = "";
+    for(let i = 0; i < messages.length; i++){
+         let type;
+         let align = "";
+         if(messages[i].sender == user) type = "message my-message";
+         else {
+             type = "message other-message float-right";
+             align = "text-right";
+          }
+         
+         let message = document.createElement("li");
+         message.classList.add("clearfix");
+         message.innerHTML += `<div class="message-data ${align}">
+         <span class="message-data-time">${messages[i].sentAt}</span>
+     </div>
+     <div class='${type}'>${messages[i].message}</div>`;
+         messageList.append(message);          
+    }
+}
+
+
 const getChats = () => {
     console.log("Getting chats...");
     fetch(`${URL}/chat/conversations`, {
@@ -102,47 +171,8 @@ const getChats = () => {
     .then(data => {
         console.log(data);
         if (data.success){
-            let status;
             const chats = data.data;
-            if(chats.length < 1) {
-                title1.style.display = "flex";
-                return;
-            }
-            else title1.style.display = "none";
-            for (let i = 0; i < chats.length; i++) {
-                console.log(chats[i].name + " status: " + chats[i].status);
-                if(chats[i].status == "online") status = "online";
-                else status = "offline";
-                let newChat = document.createElement("li");
-                newChat.classList.add("clearfix");
-                newChat.innerHTML = `
-                  <img src="images/defaultIcon.png" alt="avatar">
-                  <div class="about">
-                    <div class="name">${chats[i].name}</div>
-                    <div class="status"> <i class="fa fa-circle ${status}"></i> ${status} </div>                                            
-                  </div>`;
-              
-                newChat.addEventListener('click', () => {
-                  getMessages(chats[i].id);
-                  if(title2.style.display != "none") {
-                    console.log("changing appearance.......");
-                    title2.style.display = "none";
-                    topHeading.style.display = "flex";
-                    bottom.style.display = "block";
-                  }
-                  // Remove the "active" class from previously clicked chat
-                  const activeChat = document.querySelector('.clearfix.active');
-                  if (activeChat) {
-                    activeChat.classList.remove('active');
-                  }
-                  newChat.classList.add('active');
-                  chatName.innerText = chats[i].name;
-                  currentChat = chats[i].id;
-                  socket.emit("joinRoom", chats[i].id);
-                });
-              
-                chatList.append(newChat);
-              }
+            updateChats(chats);
             return;
         }
         else return alert(data.error);
@@ -176,25 +206,9 @@ const getMessages = (chatID) => {
         console.log(data);
         if (data.success){
             if(!user) return alert("A problem occurred."); 
-            messageList.innerHTML = "";
-           const messages = data.data;
-           for(let i = 0; i < messages.length; i++){
-                let type;
-                let align = "";
-                if(messages[i].sender == user) type = "message my-message";
-                else {
-                    type = "message other-message float-right";
-                    align = "text-right";
-                 }
-                
-                let message = document.createElement("li");
-                message.classList.add("clearfix");
-                message.innerHTML += `<div class="message-data ${align}">
-                <span class="message-data-time">${messages[i].sentAt}</span>
-            </div>
-            <div class='${type}'>${messages[i].message}</div>`;
-                messageList.append(message);          
-           }
+            const messages = data.data;
+            allMessages = messages;
+            updateChatMessages(messages);
             return;
         }
         else return alert(data.error);
@@ -217,6 +231,9 @@ function updateUsers() {
 }
 
 function updateMessages(message) {
+    allMessages.push(message)
+    if(searching) return;
+    
     let type;
     let align = "";
     if(message.user == user) type = "message my-message";
@@ -323,6 +340,82 @@ function loginHandler(e) {
             });
 }
 
+const searchChats = () => {
+    const query = chatsSearch.value;
+    fetch(`${URL}/chat/searchChats/${query}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        console.log("RESPONSE:");
+        console.log(response);
+        if(response.status == 401){
+            window.location.href = "/client/login.html";   
+            return;
+        }
+        if (!response.ok) {
+            return alert("A Problem Occured");
+        } 
+
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        if (data.success){
+            const chats = data.data;
+            updateChats(chats);
+            return;
+        }
+        else return alert(data.error);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        //return alert("Something went wrong :(");
+    });
+}
+
+const searchMsgs = () => {
+
+    const query = msgSearch.value;
+    fetch(`${URL}/chat/search`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ query: query, chatID: currentChat}),
+    })
+    .then(response => {
+        console.log("RESPONSE:");
+        console.log(response);
+        if(response.status == 401){
+            window.location.href = "/client/login.html";   
+            return;
+        }
+        if (!response.ok) {
+            return alert("A Problem Occured");
+        } 
+
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        if (data.success){
+            const chats = data.data;
+            updateChats(chats);
+            return;
+        }
+        else return alert(data.error);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        //return alert("Something went wrong :(");
+    });
+}
+
 const userOffline = () => {
     socket.emit("offline", user);
 }
@@ -331,6 +424,8 @@ const userOnline = () => {
     if(user)
         socket.emit("online", user);
 }
+
+
 
 if(logout){
     logout.addEventListener('click', () => {
@@ -365,6 +460,7 @@ if(logout){
     })
 }
 
+
 if(sendMsg){    
     // window.addEventListener('blur', () => {
     //     setTimeout(userOffline, 60000);
@@ -373,9 +469,31 @@ if(sendMsg){
     window.addEventListener('blur', userOffline);
     getChats();
     getProfile();
+    
     //window.addEventListener('load', getChats());
     //window.addEventListener('load', getProfile());
     sendMsg.addEventListener('click', messageSubmitHandler);
+    
+    document.getElementById("searchBtn1").addEventListener("click", searchChats);
+    chatsSearch.addEventListener("input", searchChats);
+    msgSearch.addEventListener("input", searchMsgs);
+    document.getElementById("searchBtn3").addEventListener("click", searchMsgs);
+    searchBtn.addEventListener("click", () => {
+        const iconElement = searchBtn.querySelector("i");
+        searching = !searching;
+
+        if (searching) {
+            iconElement.classList.remove("fa-search");
+            iconElement.classList.add("fa-comment");
+            document.getElementById("searchBlock").style.display = "flex";
+            bottom.style.display = "none";
+        } else {
+            iconElement.classList.remove("fa-comment");
+            iconElement.classList.add("fa-search");
+            document.getElementById("searchBlock").style.display = "none";
+            bottom.style.display = "block";
+          }
+    });
 }
 
 if(login)

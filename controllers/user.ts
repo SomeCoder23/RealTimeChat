@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import express from 'express';
 import { Contacts } from "../db/entities/Contacts.js";
 import "dotenv/config"
+import { ILike } from 'typeorm';
 
 const createUser = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
@@ -250,6 +251,24 @@ const getUsers = async ( req: any, res: express.Response, next: express.NextFunc
   }
 }
 
+//may need formating
+const searchUsers =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const query = req.params.query;
+  let users;
+  if(query.length < 1) users = await User.find(); 
+  else users = await User.find({
+    where: {username: ILike(`${query}%`)}
+  });
+
+  if(users){
+    res.status(200).json({success: true, data: users})
+  }
+  else {
+    res.status(500).json({success: false, error: "Problemo occurred."})
+  }
+}
+
+
 const changeStatus = async (status: string, username: string) => {
   try { const user = await User.findOneBy({username});
   if(user){
@@ -289,5 +308,6 @@ export {
   deleteAccount,
   getContacts,
   getUsers,
-  changeStatus
+  changeStatus,
+  searchUsers
 };

@@ -12,7 +12,6 @@ import {
   deleteMessage,
   addContact,
   getHistory,
-  searchUsers,
   searchMessages,
   searchChats,
   changeChatStatus
@@ -53,14 +52,13 @@ router.post("/clear_chat/:chatId", clearChat);
 //router.post('/addContact/:username', addContact);
 //removes self permenantly from chat....
 router.post("/leave_chat/:chatId", leaveRoom);
-router.post("/searchUsers/:query", searchUsers);
-router.post("/search", searchMessages);
-router.post("/searchChats/:query", searchChats);
 
 //GET ROUTES
 
 //not started*********************************
 router.get("/", getChats);
+router.get("/search", searchMessages);
+router.get("/searchChats/:query", searchChats);
 router.get("/chatInfo/:chatId", getGroupInfo);
 router.get("/conversations", getChats);
 router.get("/getMessages/:chatId", getChatMessages);

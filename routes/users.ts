@@ -7,7 +7,8 @@ import {
     logout,
     changePassword,
     deleteAccount,
-    getContacts
+    getContacts,
+    searchUsers
   } from '../controllers/user.js';
 import {validateUser, validateLogin} from '../middleware/validation/user.js';
 import { authenticate } from '../middleware/auth/authenticate.js';
@@ -27,6 +28,7 @@ router.post('/addContact/:username', authenticate, addContact);
 //GET ROUTES
 router.get('/', authenticate, getUsers);
 router.get('/contacts', authenticate, getContacts);
+router.get("/search/:query", searchUsers);
 router.get('/status/:id', authenticate, async (req, res) =>{
 
   //gets the presence status of the specified user 

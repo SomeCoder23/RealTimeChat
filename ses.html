@@ -62,7 +62,7 @@
     <div id="app">
         <div class="nes-container with-title is-centered">
             <p class="title">Contact Us</p>
-            <form class="form" id="contact-us" method="POST" action="/review/email">
+            <form class="form" id="contact-us" method="POST" action="/ses/email">
                 <div class="nes-field">
                     <label for="name_field">Your Name</label>
                     <input placeholder="Enter Your Name" type="text" name="name" id="name_field" class="nes-input">
@@ -85,9 +85,9 @@
     const formEL = document.querySelector('.form');
     formEL.addEventListener('submit', event => {
         event.preventDefault();
-        const formData = a new FormData(formEL);
+        const formData =  new FormData(formEL);
         const data = Object.fromEntries(formData);
-        fetch('http://localhost:3000/review/email', {
+        fetch('http://localhost:5000/email/email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

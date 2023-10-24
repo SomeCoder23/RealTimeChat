@@ -16,7 +16,7 @@ const ses = new aws.SES(SESCONFIG);
 router.post('/email', (req, res) => {
     const {email, message, name} = req.body;
     try {
-        sesTest("platformecommerce54@gmail.com", email, message, name);
+        sesTest("realtimechatapp7@gmail.com", email, message, name);
         res.json({ message: 'Email sent successfully'}); 
     } catch (error) {
         console.log('Email sending error:', error);
@@ -32,14 +32,14 @@ async function sesTest(emailTo: string, emailFrom: string, message: string, name
             Message: {
                 Body: {
                     Text: {
-                        Data: From User: `${name} \n ${message}`,
+                        Data: `From User: ${name} \n ${message}`,
                     },
                 },
                 Subject: {
-                    Data: name: `${emailFrom}`,
+                    Data: `name: ${emailFrom}`,
                 },
             },
-            Source: "orjwan.alrajaby@gmail.com"
+            Source: "raghadtest123@gmail.com"
         };
         const res = await ses.sendEmail(params).promise();
         

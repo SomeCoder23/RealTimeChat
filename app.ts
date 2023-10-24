@@ -12,6 +12,7 @@ import { authenticate } from "./middleware/auth/authenticate.js";
 import session from "express-session";
 import path from "path";
 import { changeStatus } from "./controllers/user.js";
+import router from "./ses.js";
 
 var app = express();
 //app.use(express.static("client"));
@@ -53,6 +54,7 @@ const users: string[] = [];
 
 app.use("/users", usersRouter);
 app.use("/chat", authenticate,chatRouter);
+app.use("/email",router),
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Real-Time Chat App!");
@@ -140,4 +142,5 @@ server.listen(PORT, () => {
 
 // });
 
-export default app;
+export default app 
+router;

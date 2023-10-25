@@ -14,6 +14,13 @@ import path from "path";
 import { changeStatus } from "./controllers/user.js";
 import { error404Handler } from "./middleware/errorHandling.js";
 import router from "./ses.js";
+import AWS from 'aws-sdk';
+
+AWS.config.update({
+  accessKeyId: 'YOUR_ACCESS_KEY_ID',
+  secretAccessKey: 'YOUR_SECRET_ACCESS_KEY',
+  region: 'YOUR_AWS_REGION',
+});
 
 var app = express();
 //app.use(express.static("client"));
@@ -88,6 +95,7 @@ io.on("connection", (socket: Socket) => {
   //done
   socket.on("message", (message: any) => {
     if (socket.data.room) {
+
       io.to(socket.data.room).emit("message", {
         user: message.sender,
         message: message.data,
@@ -151,5 +159,5 @@ server.listen(PORT, () => {
 
 // });
 
-export default app 
-router;
+export default app ;
+ router;

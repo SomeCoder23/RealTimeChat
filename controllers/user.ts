@@ -94,7 +94,7 @@ const login = async ( req: express.Request, res: express.Response, next: express
           },
           process.env.SECRET_KEY || '',
           {
-            expiresIn: "30m"
+            expiresIn: "1h"
           }
         );
         //change presences status of user.
@@ -120,7 +120,7 @@ const login = async ( req: express.Request, res: express.Response, next: express
        res.status(200).json({ success: true, msg: "Successfully logged in!" }).send();
         
       } else {
-        res.status(500).json({success: false, error: " :(Invalid Username or password!"});
+        res.status(500).json({success: false, error: " Invalid Username or password!"});
       }
     } catch (error) {
       console.log(error);

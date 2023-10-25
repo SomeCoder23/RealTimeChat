@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE-edge">
+    <meta name="viewport" content="width-device-width, initial-scale=1.0">
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1473.0.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/nes.css@latest/css/nes.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f2f2f2;
+            cursor: pointer; 
+        }
+        .nes-container {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 1000px;
+            height: 800px; 
+            margin: 0 auto;
+        }
+        .nes-field {
+            margin-bottom: 20px;
+        }
+        .nes-field label {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .nes-input,
+        .nes-textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1em; 
+        }
+        .nes-btn {
+            background-color: #5BC0DE;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold; 
+            font-size: 1.2em; 
+        }
+        .nes-btn:hover {
+            background-color: #0083B0;
+        }
+        .title {
+            font-size: 2em; 
+            font-weight: bold; 
+            margin-top: 10px; 
+        }
+    </style>
+    <title>Demo App</title>
+</head>
+<body>
+    <div id="app">
+        <div class="nes-container with-title is-centered">
+            <p class="title">Contact Us</p>
+            <form class="form" id="contact-us" method="POST" action="/ses/email">
+                <div class="nes-field">
+                    <label for="name_field">Your Name</label>
+                    <input placeholder="Enter Your Name" type="text" name="name" id="name_field" class="nes-input">
+                </div>
+                <div class="nes-field">
+                    <label for="email_field">Your Email</label>
+                    <input placeholder="Enter Your Email" type="email" name="email" id="email_field" class="nes-input">
+                </div>
+                <div class="nes-field">
+                    <label for="message_field">Message</label>
+                    <textarea placeholder="Enter your message here" name="message" rows="6" id="message_field" class="nes-textarea"></textarea>
+                </div>
+                <button type="submit" id="button" class="nes-btn is-success">Send</button>
+                <button type="reset" id="button" class="nes-btn is-error">Clear</button>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+    const formEL = document.querySelector('.form');
+    formEL.addEventListener('submit', event => {
+        event.preventDefault();
+        const formData =  new FormData(formEL);
+        const data = Object.fromEntries(formData);
+        fetch('http://localhost:5000/email/email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => console.log(data))
+        .catch(error => console.log(error));
+    });
+</script>
+</html>

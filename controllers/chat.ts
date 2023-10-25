@@ -21,7 +21,7 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
 
   try {
     //if its a group chat
-    if (!req.params.username) {
+    if (!req.body.username) {
       desc = req.body.description;
       chatName = req.body.name;
       type = "group";
@@ -171,7 +171,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
   const user = res.locals.user;
   const id = Number(req.params.chatId);
   let message = req.body.content;
-
+  console.log("SENDING....SENDING....");
   //checks if chat exists 
   const chat:any = await validate(id, user);
   if(chat){
@@ -258,24 +258,29 @@ const leaveRoom = async ( req: express.Request, res: express.Response, next: exp
   removeParticipant(req, res, next);
 }
 
-const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const user = res.locals.user;
-  console.log("INSIDDEEE...");
+const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction, user: any) => {
+  //const user = res.locals.user;
+  console.log("INSIDDEEE GET CHATS...");
   try{
         const userChats = await UserChat.find({where: {user: user}, order: {
           lastEntry: "DESC" 
         }});
         if(userChats){
-        
+        console.log("USER CHATS: ");
+        console.log(userChats);
         let formatedChats = [];
         for(let i = 0; i < userChats.length; i++){
           const chatty = await formatChatInfo(userChats[i], user);
           formatedChats.push(chatty);
         }
-        res.status(200).json({success: true, totalChats: formatedChats.length, data: formatedChats});}
+        console.log("READY TO SEND....");
+        //return 200;
+        res.status(200).json({success: true, totalChats: formatedChats.length, data: formatedChats});
+      }
     
       } catch(error){
-        console.error(error);
+        console.log(error);
+        //return error;
         res.status(500).json({success: false, error: "Problem occurred"});
 
       }
@@ -518,9 +523,6 @@ else res.status(400).json({success: false, error: "Invalid chat."})
 
 }
 
-// const leaveRoom = () => {
-//   return socket.emit("leaveRoom");
-// }
 
 //checks if chat exists and user is a participant
 const validate = async (id: number, user: any) => {
@@ -566,7 +568,33 @@ const formatMessages = async (messages: Message[]) => {
   return formatedMessages;
 }
 
+//<><><><><><><><><><><>><><><><><><><><><><><><><><><><><><><<><<><<<>>>
+//FOR TESTING (SAME AS ABOVE BUT WITHOUT THE RESPONSE AND REQUEST OBJECTS):
 
+const getChatsTEST = async (user: any) => {
+  //const user = res.locals.user;
+  console.log("INSIDDEEE GET CHATS...");
+  try{
+        const userChats = await UserChat.find({where: {user: user}, order: {
+          lastEntry: "DESC" 
+        }});
+        if(userChats){
+        console.log("USER CHATS: ");
+        console.log(userChats);
+        let formatedChats = [];
+        for(let i = 0; i < userChats.length; i++){
+          const chatty = await formatChatInfo(userChats[i], user);
+          formatedChats.push(chatty);
+        }
+        console.log("READY TO SEND....");
+        return {status: 200, data: formatedChats};
+      }
+    
+      } catch(error){
+        console.log(error);
+        return {status: 500, error: "Something went wrong"};
+      }
+}
 
 
 export {
@@ -585,5 +613,6 @@ export {
   addContact,
   searchMessages,
   searchChats,
-  changeChatStatus
+  changeChatStatus,
+  getChatsTEST
 };

@@ -117,7 +117,7 @@ const login = async ( req: express.Request, res: express.Response, next: express
         sameSite: 'none',
         secure: true,
       });
-       res.status(200).json({ success: true, msg: "Successfully logged in!" }).send();
+       res.status(200).json({ success: true, msg: "Successfully logged in!" , token: token}).send();
         
       } else {
         res.status(500).json({success: false, error: " Invalid Username or password!"});
@@ -296,6 +296,44 @@ const formatContacts = async (contacts: Contacts[]) => {
   return formatedContacts;
 }
 
+//<><><><><><><><><><><>><><><><><><><><><><><><><><><><><><><<><<><<<>>>
+//FOR TESTING (SAME AS ABOVE BUT WITHOUT THE RESPONSE AND REQUEST OBJECTS):
+
+const updateUserProfileTEST = async (user: any, body: any) => {
+  try
+  {
+      let profile : Profile = user.profile;
+      profile.fullName = body.fullName !== undefined ? body.fullName : profile.fullName;
+      profile.birthday = body.birthday !== undefined ? body.birthday : profile.birthday;
+      profile.bio = body.bio !== undefined ? body.bio : profile.bio;
+
+      return await profile.save().then(() => {
+        console.log("SAVED PROFILE...");
+        return {status: 201, msg: "Profile Updated Successfully!", data: profile};
+      }).catch(error => {
+        console.error(error);
+      return {status: 500, error: "Failed to update user profile."}
+
+      });
+
+    } catch(error){
+      console.log("###ERROR: ");
+      console.log(error);
+      return {status: 500, error: "Failed to update user profile."}
+    }
+}
+
+const getContactsTEST = async (user: any) => {
+  const contacts = await Contacts.find({where: 
+    {user: user}
+  })
+  if(contacts){
+    const people = await formatContacts(contacts);
+    return {status: 200, data: people}
+  }
+  else return {status: 500, error: "Problem occurred"}
+
+}
 
 export {
   createUser,
@@ -307,5 +345,7 @@ export {
   getContacts,
   getUsers,
   changeStatus,
-  searchUsers
+  searchUsers,
+  updateUserProfileTEST,
+  getContactsTEST
 };

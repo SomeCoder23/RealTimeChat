@@ -23,33 +23,13 @@ AWS.config.update({
 });
 
 var app = express();
-//app.use(express.static("client"));
+app.use(express.static("client"));
 const PORT = 5000;
 app.use(express.json());
 
 app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
 app.use(cookieParser());
 const server = http.createServer(app);
-
-// Your API routes
-app.get('/setCookie', (req, res) => {
-  console.log("COOKIE BEING SET....");
-  res.cookie('myCookie3', 'cookieValue', { httpOnly: false, sameSite: 'lax' });
- res.setHeader('Set-Cookie', 'myCookie1=exampleValue; HttpOnly');
- res.cookie('myCookie2', 'exampleValue', { httpOnly: true });
- res.cookie('token', 'cookieValue', {
-  httpOnly: true,
-  sameSite: 'none',
-  secure: true, 
-});
-  res.send('Cookie set successfully.');
-});
-
-// app.get('/getCookie', authenticate, (req, res) => {
-//   const token = req.cookies.token;
-//   console.log(token);
-//   res.json({ token});
-// });
 
 const io = new Server(server, {
   cors: {
@@ -97,7 +77,7 @@ io.on("connection", (socket: Socket) => {
     if (socket.data.room) {
 
       io.to(socket.data.room).emit("message", {
-        user: message.sender,
+        sender: message.sender,
         message: message.data,
         sentAt: message.time,
         chat: socket.data.room

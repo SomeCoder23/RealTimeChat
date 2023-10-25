@@ -7,8 +7,7 @@ const authenticate = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  console.log("TOKEN: ");
-  console.log(req.cookies.token);
+  console.log("Inside AUTHENTICATE ");
   const token = req.headers['authorization'] || req.cookies['token'] || '';  
   let tokenIsValid;
   try {

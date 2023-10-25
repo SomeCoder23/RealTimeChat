@@ -1,20 +1,17 @@
 import "../dist/config.js";
 import express from "express";
+import { Request, Response } from 'express'; 
 import request from "supertest";
 import usersRouter from "../dist/routes/users.js";
 import dataSource from "../dist/db/dataSource.js";
 import {
-  createUser,
-  login,
-  searchUsers,
-  logout,
-  updateUserProfile,
-  getContacts,
+  updateUserProfileTEST,
+  getContactsTEST
 } from "../dist/controllers/user.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-
-// import { authenticate } from "../middleware/auth/authenticate.js";
+import { User } from "../dist/db/entities/User.js";
+import { getChatsTEST } from "../dist/controllers/chat.js";
 
 dotenv.config();
 const app = express();
@@ -40,40 +37,42 @@ afterAll(async () => {
 });
 
 
-
+const username = "TEST_USER";
+let token;
 
 describe("register process", () => {
   it("should register with valid credentials", async () => {
     const user = {
-      fullName: "hayat amro",
-      username: "hayoot",
+      fullName: "new person",
+      username: "TEST_USER2",
       password: "123456",
       birthday: "2000-11-11",
       email: "hayat@gmail.com",
     };
 
     const response = await request(app).post("/users/register").send(user);
-
+    if(response.statusCode == 400)
+      console.log(response.body.error);
     expect(response.status).toBe(201);
+
   });
 });
-
-
 
 
 describe("Login process", () => {
   it("should login with valid credentials", async () => {
     const user = {
-      username: "raghad",
+      username: username,
       password: "123456",
     };
 
     const response = await request(app).post("/users/login").send(user);
 
     expect(response.status).toBe(200);
+    token = response.body.token;
+
   });
 });
-
 
 
 describe("searchUsers process", () => {
@@ -88,78 +87,45 @@ describe("searchUsers process", () => {
 });
 
 
+describe("getChats process", () => {
+  
+  it("should return chats for current user", async () => {
+    const user = await User.findOneBy({username});
+    const result = await getChatsTEST(user);
+    console.log("RESULT: ");
+    console.log(result);
+    expect(result.status).toBe(200);
+    expect(Array.isArray(result.data)).toBe(true);
+  });
+});
+
+describe("updateUserProfile process", () => {
+
+  const name = "test name2";
+  const bio = "i'm quitting programminggggg";
+  const bday = "1900-11-12";
+
+  it("should update profile of user", async () => {
+    const user = await User.findOneBy({username});
+    const result = await updateUserProfileTEST(user, {fullName: name, bio: bio, birthday: bday});
+    console.log("RESULT: ");
+    console.log(result);
+    expect(result.status).toBe(201);
+    expect(result.data.fullName).toBe(name);
+    expect(result.data.birthday).toBe(bday);
+    expect(result.data.bio).toBe(bio);
+  });
+
+});
 
 
-
-// describe("logout process", () => {
-//   it("should log out the user", async () => {
-//     const user = {
-//       username: "raghad",
-//     };
-
-//     const authToken = jwt.sign(
-//       { username: user.username },
-//       process.env.SECRET_KEY,
-//       {
-//         expiresIn: "1h",
-//       }
-//     );
-
-//     const response = await request(app)
-//       .post("/users/logout")
-//       .set("Authorization", `Bearer ${authToken}`);
-
-//     expect(response.status).toBe(200);
-
-//     expect(response.body.success).toBe(true);
-//   });
-// });
-
-
-
-
-// describe("updateUserProfile process", () => {
-//   it("should update the user profile", async () => {
-//     // Assuming you have already authenticated the user and have a valid token
-//     const authToken = "your_auth_token_here";
-
-//     const updatedProfile = {
-//       fullName: "New Full Name",
-//       birthday: "1990-01-01",
-//       bio: "New bio information",
-//     };
-
-//     const response = await request(app)
-//       .put("/users/profile")
-//       .send(updatedProfile)
-//       .set("Authorization", `Bearer ${authToken}`); // Replace with your authentication method
-
-//     expect(response.status).toBe(201);
-
-//     // Assuming the response body contains the updated profile data
-//     expect(response.body.success).toBe(true);
-//     expect(response.body.msg).toBe("Profile Updated Successfully!");
-//     expect(response.body.data.fullName).toBe(updatedProfile.fullName);
-//     expect(response.body.data.birthday).toBe(updatedProfile.birthday);
-//     expect(response.body.data.bio).toBe(updatedProfile.bio);
-//   });
-// });
-
-
-
-
-
-// describe("getContacts process", () => {
-//   it("should retrieve user contacts", async () => {
-//     const authToken = "your_auth_token_here";
-
-//     const response = await request(app)
-//       .get("/users/contacts")
-//       .set("Authorization", `Bearer ${authToken}`);
-
-//     expect(response.status).toBe(200);
-
-//     expect(response.body.success).toBe(true);
-//     expect(Array.isArray(response.body.data)).toBe(true);
-//   });
-// });
+describe("getContacts process", () => {
+  it("should retrieve user contacts", async () => {
+    const user = await User.findOneBy({username});
+    const result = await getContactsTEST(user);
+    console.log("RESULT: ");
+    console.log(result);
+    expect(result.status).toBe(200);
+    expect(Array.isArray(result.data)).toBe(true);
+  });
+});

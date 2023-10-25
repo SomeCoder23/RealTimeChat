@@ -41,17 +41,13 @@ socket.on("message", (message) => {
 socket.on("attachment", file => {
     allMessages.push(file);
     if(searching) return;
-    if(currentChat == message.chat)  
+    if(currentChat == file.chat)  
     addAttachment(file);
 })
 
-
 socket.on('users', function (_users) {
     console.log(_users + " connected");
-    // users = _users
-    // updateUsers();
 });
-
 
 const getProfile = () => {
     if(username !== null){
@@ -126,6 +122,7 @@ const updateChats = (chats) => {
           newChat.classList.add('active');
           chatName.innerText = chats[i].name;
           currentChat = chats[i].id;
+          sessionStorage.setItem('currentChat', chats[i].id);
           socket.emit("joinRoom", chats[i].id);
         });
       
@@ -485,17 +482,13 @@ const sendAttachment = (file, type) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", type);
-    fetch(`localhost:5000/chat/sendAttachment/${currentChat}`, {
+    fetch(`${URL}/chat/sendAttachment/${currentChat}`, {
         method: 'POST',
-       // mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         credentials: 'include',
         body: formData,
     })
     .then(response => {
-        console.log("RESPONSE:");
+        console.log("FILE RESPONSE:");
         console.log(response);
         if (!response.ok) {
             return alert("Failed to send attachment :(");
@@ -507,14 +500,14 @@ const sendAttachment = (file, type) => {
         console.log(data);
         if (data.success){
             console.log(data.data);
-            //socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender})
-            socket.emit("attachment", {data: data.message, time: data.data.time, sender: data.data.sender, type: type})
-            return;
+            sessionStorage.setItem('sentFile', true);
+            return socket.emit("attachment", {data: data.message, time: data.data.time, sender: data.data.sender, type: type})
         }
         else return alert(data.error);
     })
     .catch(error => {
         console.error('Error:', error);
+        return alert("Ooops couldn't send attachment.");
     });
 }
 
@@ -526,8 +519,6 @@ const userOnline = () => {
     if(user)
         socket.emit("online", user);
 }
-
-
 
 if(logout){
     logout.addEventListener('click', () => {
@@ -565,6 +556,12 @@ if(logout){
 
 
 if(sendMsg){    
+    const displayMsgs = sessionStorage.getItem('sentFile');
+    if(displayMsgs) {
+        const chatId = sessionStorage.getItem('currentChat');
+        getMessages(chatId);
+        sessionStorage.setItem('sentFile', false);
+    }
     // window.addEventListener('blur', () => {
     //     setTimeout(userOffline, 60000);
     //   });
@@ -572,10 +569,9 @@ if(sendMsg){
     window.addEventListener('blur', userOffline);
     getChats();
     getProfile();
-    
     //window.addEventListener('load', getChats());
     //window.addEventListener('load', getProfile());
-
+    const hiddenBtn = document.getElementById("submitAttachment");
     document.getElementById("clearBtn").addEventListener("click", clearMsgs);
     document.getElementById("imgBtn").addEventListener("click", () => {
         document.getElementById('imgInput').click();
@@ -584,12 +580,20 @@ if(sendMsg){
         document.getElementById('fileInput').click();
     });
     document.getElementById('imgInput').addEventListener('change', (event) => {
+        event.preventDefault();
         const selectedFile = event.target.files[0];
-        if (selectedFile) sendAttachment(selectedFile, "image");
+        if (selectedFile) {
+            hiddenBtn.click();
+            sendAttachment(selectedFile, "image");
+        }
     });
     document.getElementById('fileInput').addEventListener('change', (event) => {
+        event.preventDefault();
         const selectedFile = event.target.files[0];
-        if (selectedFile) sendAttachment(selectedFile, "file");
+        if (selectedFile) {
+            hiddenBtn.click();
+            sendAttachment(selectedFile, "file");
+        }
     })
     sendMsg.addEventListener('click', messageSubmitHandler);
     document.getElementById("searchBtn1").addEventListener("click", searchChats);
@@ -615,8 +619,10 @@ if(sendMsg){
             bottom.style.display = "block";
           }
     });
+    document.getElementById("attachmentsForm").addEventListener("submit", e =>{
+        e.preventDefault();
+    })
 }
 
 if(login)
 login.addEventListener('submit', loginHandler)
-

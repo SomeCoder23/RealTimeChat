@@ -13,7 +13,16 @@ import session from "express-session";
 import path from "path";
 import { changeStatus } from "./controllers/user.js";
 import { error404Handler } from "./middleware/errorHandling.js";
-import router from "./ses.js";
+// import router from "./ses.js";
+import AWS from 'aws-sdk';
+
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_SES_REGION
+});
+const ses = new AWS.SES({ region: 'eu-north-1' });
+
 
 var app = express();
 app.use(express.static("client"));
@@ -35,7 +44,7 @@ const users: string[] = [];
 
 app.use("/users", usersRouter);
 app.use("/chat", authenticate,chatRouter);
-app.use("/email",router);
+// app.use("/email",router);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Real-Time Chat App!");
@@ -68,13 +77,43 @@ io.on("connection", (socket: Socket) => {
   //done
   socket.on("message", (message: any) => {
     if (socket.data.room) {
-      io.to(socket.data.room).emit("message", {
-        sender: message.sender,
+      const messageData = {
+        user: message.sender,
         message: message.data,
         sentAt: message.time,
-        chat: socket.data.room
+        chat: socket.data.room,
+      };
+      
+      io.to(socket.data.room).emit("message", messageData);
+  
+      const emailParams: AWS.SES.SendEmailRequest = {
+        Source: 'realtimechatapp7@gmail.com', 
+        Destination: {
+          ToAddresses: ['raghadtest123@gmail.com'], 
+        },
+        Message: {
+          Subject: {
+            Data: 'New Message Notification',
+          },
+          Body: {
+            Text: {
+              Data: `New message from ${message.sender}: ${message.data}`,
+            },
+          },
+        },
+      };
+  
+      ses.sendEmail(emailParams, (err, data) => {
+        if (err) {
+          console.error("Error sending email:", err);
+        } else {
+          console.log("Email sent:", data);
+        }
       });
-    } else { console.log("NOT IN ROOM"); socket.emit("message", "Not in room.");}
+    } else {
+      console.log("NOT IN ROOM");
+      socket.emit("message", "Not in room.");
+    }
   });
 
   socket.on("attachment", (file: any) => {
@@ -131,5 +170,4 @@ server.listen(PORT, () => {
 
 // });
 
-export default app 
-router;
+export default app ;

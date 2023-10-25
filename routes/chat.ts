@@ -33,6 +33,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 router.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+
 //POST ROUTES
 router.post("/sendMessage/:chatId", (req, res, next) =>
   sendMessage(req, res, next, "text")
@@ -56,9 +57,9 @@ router.post("/leave_chat/:chatId", leaveRoom);
 
 //GET ROUTES
 
-router.get("/", getChats);
+router.get("/", (req, res, next) => getChats(req, res, next, res.locals.user));
 router.get("/chatInfo/:chatId", getGroupInfo);
-router.get("/conversations", getChats);
+router.get("/conversations", (req, res, next) => getChats(req, res, next, res.locals.user));
 router.get("/getMessages/:chatId", getChatMessages);
 router.get("/history/:chatId", getHistory);
 

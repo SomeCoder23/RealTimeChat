@@ -32,11 +32,16 @@ let searching = false;
 
 socket.on("message", (message) => {
     //messages.push(message);
+    allMessages.push(message);
+    if(searching) return;
     if(currentChat == message.chat)
      addMessage(message);
 })
 
 socket.on("attachment", file => {
+    allMessages.push(file);
+    if(searching) return;
+    if(currentChat == message.chat)  
     addAttachment(file);
 })
 
@@ -131,31 +136,14 @@ const updateChats = (chats) => {
 const updateChatMessages = (messages) => {
     messageList.innerHTML = "";
     for(let i = 0; i < messages.length; i++){
-        
         if(messages[i].type == "image" || messages[i].type =="file")
             addAttachment(messages[i]);
-        else addMessage(messages[i]);
-    //      let type;
-    //      let align = "";
-    //      if(messages[i].sender == user) type = "message my-message";
-    //      else {
-    //          type = "message other-message float-right";
-    //          align = "text-right";
-    //       }
-         
-    //      let message = document.createElement("li");
-    //      message.classList.add("clearfix");
-    //      message.innerHTML += `<div class="message-data ${align}">
-    //      <span class="message-data-time">${messages[i].sentAt}</span>
-    //  </div>
-    //  <div class='${type}'>${messages[i].message}</div>`;
-    //      messageList.append(message);          
+        else addMessage(messages[i]);      
     }
 }
 
 function addAttachment(file) {
-    //allMessages.push(message)
-    if(searching) return;  
+    //allMessages.push(message)  
     let type;
     let align = "";
     let content;
@@ -165,7 +153,7 @@ function addAttachment(file) {
         align = "text-right";
         }
     if(file.type == "image"){
-        content = `<img src=${file.message} alt="Image" class="chat-image">`
+        content = `<img src=${file.message} alt="Image" class="chat-image" id=${file.message}>`
     } else {
         content = `<a href=${file.message} target="_blank" class="chat-file">
         View File
@@ -177,8 +165,15 @@ function addAttachment(file) {
     <span class="message-data-time">${file.sentAt}</span>
 </div>
 <div class='${type}'>${content}</div>`;
-    messageList.append(newMsg);   
-   
+    messageList.append(newMsg); 
+    const fileElement = document.getElementById(file.message);
+    if(fileElement){fileElement.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log("toggling....");
+        fileElement.classList.toggle("expanded");
+        document.getElementById("backdrop").classList.toggle("appear");
+        console.log(fileElement.classList);
+    });}
 }
 
 const getChats = () => {
@@ -242,7 +237,7 @@ const getMessages = (chatID) => {
         if (data.success){
             if(!user) return alert("A problem occurred."); 
             const messages = data.data;
-           // allMessages = messages;
+            allMessages = messages;         
             updateChatMessages(messages);
             return;
         }
@@ -267,7 +262,6 @@ function updateUsers() {
 
 function addMessage(message) {
     //allMessages.push(message)
-    if(searching) return;  
     let type;
     let align = "";
     if(message.sender == user) type = "message my-message";
@@ -440,6 +434,8 @@ const searchMsgs = () => {
         console.log(data);
         if (data.success){
             const messages = data.data;
+            // console.log("MESSAGES: ");
+            // console.log(messages);
             updateChatMessages(messages);
             return;
         }
@@ -489,8 +485,9 @@ const sendAttachment = (file, type) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", type);
-    fetch(`${URL}/chat/sendAttachment/${currentChat}`, {
+    fetch(`localhost:5000/chat/sendAttachment/${currentChat}`, {
         method: 'POST',
+       // mode: 'no-cors',
         headers: {
             'Content-Type': 'application/json',
         },
@@ -520,7 +517,6 @@ const sendAttachment = (file, type) => {
         console.error('Error:', error);
     });
 }
-
 
 const userOffline = () => {
     socket.emit("offline", user);
@@ -553,6 +549,7 @@ if(logout){
         .then(data => {
             console.log(data);
             if (data.success){
+                userOffline();
                 window.location.href = "/client/login.html";               
                 return;
             }
@@ -604,13 +601,14 @@ if(sendMsg){
         searching = !searching;
 
         if (searching) {
-            allMessages = messageList;
+            messageList.innerHTML = "";
             iconElement.classList.remove("fa-search");
             iconElement.classList.add("fa-comment");
             document.getElementById("searchBlock").style.display = "flex";
             bottom.style.display = "none";
         } else {
             //messageList = allMessages;
+            updateChatMessages(allMessages);
             iconElement.classList.remove("fa-comment");
             iconElement.classList.add("fa-search");
             document.getElementById("searchBlock").style.display = "none";

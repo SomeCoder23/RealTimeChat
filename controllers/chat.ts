@@ -179,19 +179,23 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
 
     if(type == "attachment"){
       //saves attachment to file on server
+      type = req.body.type;
+      console.log("The file: ");
+      console.log(req.file);
       if (!req.file) {
         res.status(500).json({success: false, error: "Failed Upload File!"});
         return;
       }
-      const fileURL = req.file.destination + req.file.filename;
+      const fileURL = "../" + req.file.destination + req.file.filename;
       message = fileURL;
+      console.log("FILE:", fileURL);
     }
 
     const newMsg = Message.create({
       content: message,
       timeSent: currentTime,
       chat_id: chat.chat.id,
-      type: type.toLowerCase() === 'attachment' ? "attachment" : "text",
+      type: type.toLowerCase() === 'image' ? "image" : type.toLowerCase() == "file"? "file": "text",
       sender: user.id
     }); 
     
@@ -471,12 +475,16 @@ const changeChatStatus = async ( req: express.Request, res: express.Response, ne
 
 
 const searchChats =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const query = req.params.query;
+  const query = req.body.query;
   const user = res.locals.user;
   let chats;
-  if(query.length < 1) chats = await UserChat.find({where: {user: user}});
+  if(query.length < 1) chats = await UserChat.find({where: {user: user}, order: {
+    lastEntry: "DESC" 
+  }});
   else chats = await UserChat.find({
-    where: {name: ILike(`${query}%`), user: user}
+    where: {name: ILike(`${query}%`), user: user}, order: {
+      lastEntry: "DESC" 
+    }
   });
 
   console.log(chats);
@@ -534,12 +542,9 @@ const formatChatInfo = async (chat: any, user: User) => {
  // const usernames = chat.participants.map((user) => user.username);
  const users = await UserChat.find({where: {chat: chat.chat}})
  const usernames = users.map(user => user.user.username);
- console.log("USERNAMES: ");
- console.log(usernames);
- const presenceStatus = users.map(userChat => {if(userChat.user != user) return userChat.user.profile.status;})
+ const presenceStatus = users.map(userChat => {if(userChat.user.id != user.id) return userChat.user.profile.status;})
  console.log(presenceStatus);
  const isOnline = presenceStatus.filter(status => status == "online");
- console.log("IS ONLINE? " + isOnline);
  return {
     id: chat.chat.id,
     name: chat.name,
@@ -556,14 +561,11 @@ const formatMessages = async (messages: Message[]) => {
   const senders : any = messages.map(message => message.sender);
   let formatedMessages : any[] = [];
   for(let i = 0; i < messages.length; i++){
-    formatedMessages.push({sender: senders[i].username, message: messages[i].content, sentAt: messages[i].timeSent});
+    formatedMessages.push({sender: senders[i].username, message: messages[i].content, sentAt: messages[i].timeSent, type: messages[i].type});
   }
   return formatedMessages;
 }
 
-const search = (query: string, data: any) => {
-
-}
 
 
 

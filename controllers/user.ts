@@ -275,9 +275,7 @@ const changeStatus = async (status: string, username: string) => {
    if(status == "online")
       user.profile.status = "online";
     else user.profile.status = "offline";
-    console.log("Changing to online....");
     user.profile.save().then(() => {
-      console.log(`${user.username} STATUS: ${user.profile.status}`);
       return;
     }).catch(error => {
       console.error(error);

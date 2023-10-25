@@ -14,10 +14,10 @@ export class Message extends BaseEntity {
   @Column({
     nullable: false, 
     type: 'enum', 
-    enum: ['text', 'attachment'], 
+    enum: ['text', 'file', 'image'], 
     default: 'text'
   })
-  type: "text" | "attachment";
+  type: "text" | "file" | 'image';
 
   @CreateDateColumn({ type: 'timestamp', /*default: () => 'CURRENT_TIMESTAMP',*/ nullable: false })
   timeSent: Date;

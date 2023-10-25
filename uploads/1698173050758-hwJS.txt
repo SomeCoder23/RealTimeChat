@@ -1,0 +1,87 @@
+class Room{
+  #booked = false;
+  constructor(floorNum, roomNum, price){
+    this.floorNum = floorNum;
+    this.roomNum = roomNum;
+    this.price = price;
+  }
+
+  printRoom(){
+    console.log("Room number is: " + this.roomNum + ". On floor number: " + this.floorNum);
+  }
+
+  book(){
+    this.booked = true;
+  }
+
+  isBooked(){
+    return this.booked;
+  }
+}
+
+class Hotel{
+  #minFloor;
+  #maxFloor;
+  constructor(address, NumberOfRooms, minFloor, maxFloor){
+    this.address = address;
+    this.NumberOfRooms = NumberOfRooms;
+    this.minFloor = minFloor;
+    this.maxFloor = maxFloor;
+    this.rooms = [];
+    let roomsPerFloor = NumberOfRooms / maxFloor;
+    let extraRooms = NumberOfRooms % maxFloor;
+    let floor = minFloor;
+    let roomCount = 0;
+    for(let i = 0; i < NumberOfRooms; i++){
+      if (extraRooms != 0)
+        extraRooms--;
+      else if (roomsPerFloor == roomCount){
+        roomCount= 0;
+        floor++;
+      }
+      else roomCount++;
+      this.rooms[i] = new Room(floor, i + 1, 100 * floor);
+    }
+  }
+
+  printAdvertisement(){
+    console.log("At " + this.address + " you'll find a nice hotel with " + this.NumberOfRooms + " rooms, from " + this.minFloor + " to " + this.maxFloor + " floors!");
+  }
+
+  listBookedRooms(){
+    console.log("List of Booked Rooms: ");
+     for(let i = 0; i < this.NumberOfRooms; i++){
+       if(this.rooms[i].isBooked())
+        this.rooms[i].printRoom();
+     }
+  }
+
+  printRooms(){
+    console.log("List of Rooms: ");
+     for(let i = 0; i < this.NumberOfRooms; i++){
+        this.rooms[i].printRoom();
+     }
+  }
+}
+
+class RoomWithView extends Room{
+  constructor(floorNum, roomNum, price, view, beds){
+      super(floorNum, roomNum, price);
+      this.view = view;
+      this.numberOfBeds = beds;
+    }
+}
+
+class SleepingRoom extends Room{
+  constructor(floorNum, roomNum, price, personCapacity){
+    super(floorNum, roomNum, price);
+    this.personCapacity = personCapacity;
+  }
+
+}
+
+console.log("hello");
+hotel = new Hotel("Ein Sarah", 20, 1, 4);
+hotel.printAdvertisement();
+hotel.printRooms();
+

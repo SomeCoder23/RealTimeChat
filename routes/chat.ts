@@ -10,7 +10,6 @@ import {
   addParticipant,
   removeParticipant,
   deleteMessage,
-  addContact,
   getHistory,
   searchMessages,
   searchChats,
@@ -31,7 +30,7 @@ const storage = multer.diskStorage({
     callback(null, Date.now() + "-" + file.originalname);
   },
 });
-const upload = multer({ storage });
+const upload = multer({ storage: storage });
 router.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 //POST ROUTES
@@ -48,6 +47,8 @@ router.post("/start_chat/:username", createChat);
 router.post("/add_participant", addParticipant);
 router.post("/remove_participant", removeParticipant);
 router.post("/clear_chat/:chatId", clearChat);
+router.post("/search", searchMessages);
+router.post("/searchChats", searchChats);
 
 //router.post('/addContact/:username', addContact);
 //removes self permenantly from chat....
@@ -55,10 +56,7 @@ router.post("/leave_chat/:chatId", leaveRoom);
 
 //GET ROUTES
 
-//not started*********************************
 router.get("/", getChats);
-router.get("/search", searchMessages);
-router.get("/searchChats/:query", searchChats);
 router.get("/chatInfo/:chatId", getGroupInfo);
 router.get("/conversations", getChats);
 router.get("/getMessages/:chatId", getChatMessages);

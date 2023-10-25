@@ -33,7 +33,11 @@ let searching = false;
 socket.on("message", (message) => {
     //messages.push(message);
     if(currentChat == message.chat)
-     updateMessages(message);
+     addMessage(message);
+})
+
+socket.on("attachment", file => {
+    addAttachment(file);
 })
 
 
@@ -127,24 +131,55 @@ const updateChats = (chats) => {
 const updateChatMessages = (messages) => {
     messageList.innerHTML = "";
     for(let i = 0; i < messages.length; i++){
-         let type;
-         let align = "";
-         if(messages[i].sender == user) type = "message my-message";
-         else {
-             type = "message other-message float-right";
-             align = "text-right";
-          }
+        
+        if(messages[i].type == "image" || messages[i].type =="file")
+            addAttachment(messages[i]);
+        else addMessage(messages[i]);
+    //      let type;
+    //      let align = "";
+    //      if(messages[i].sender == user) type = "message my-message";
+    //      else {
+    //          type = "message other-message float-right";
+    //          align = "text-right";
+    //       }
          
-         let message = document.createElement("li");
-         message.classList.add("clearfix");
-         message.innerHTML += `<div class="message-data ${align}">
-         <span class="message-data-time">${messages[i].sentAt}</span>
-     </div>
-     <div class='${type}'>${messages[i].message}</div>`;
-         messageList.append(message);          
+    //      let message = document.createElement("li");
+    //      message.classList.add("clearfix");
+    //      message.innerHTML += `<div class="message-data ${align}">
+    //      <span class="message-data-time">${messages[i].sentAt}</span>
+    //  </div>
+    //  <div class='${type}'>${messages[i].message}</div>`;
+    //      messageList.append(message);          
     }
 }
 
+function addAttachment(file) {
+    //allMessages.push(message)
+    if(searching) return;  
+    let type;
+    let align = "";
+    let content;
+    if(file.sender == user) type = "message my-message";
+    else {
+        type = "message other-message float-right";
+        align = "text-right";
+        }
+    if(file.type == "image"){
+        content = `<img src=${file.message} alt="Image" class="chat-image">`
+    } else {
+        content = `<a href=${file.message} target="_blank" class="chat-file">
+        View File
+      </a>`
+    }
+    let newMsg = document.createElement("li");
+    newMsg.classList.add("clearfix");
+    newMsg.innerHTML += `<div class="message-data ${align}">
+    <span class="message-data-time">${file.sentAt}</span>
+</div>
+<div class='${type}'>${content}</div>`;
+    messageList.append(newMsg);   
+   
+}
 
 const getChats = () => {
     console.log("Getting chats...");
@@ -207,7 +242,7 @@ const getMessages = (chatID) => {
         if (data.success){
             if(!user) return alert("A problem occurred."); 
             const messages = data.data;
-            allMessages = messages;
+           // allMessages = messages;
             updateChatMessages(messages);
             return;
         }
@@ -230,13 +265,12 @@ function updateUsers() {
     }
 }
 
-function updateMessages(message) {
-    allMessages.push(message)
-    if(searching) return;
-    
+function addMessage(message) {
+    //allMessages.push(message)
+    if(searching) return;  
     let type;
     let align = "";
-    if(message.user == user) type = "message my-message";
+    if(message.sender == user) type = "message my-message";
     else {
         type = "message other-message float-right";
         align = "text-right";
@@ -342,12 +376,13 @@ function loginHandler(e) {
 
 const searchChats = () => {
     const query = chatsSearch.value;
-    fetch(`${URL}/chat/searchChats/${query}`, {
-        method: 'GET',
+    fetch(`${URL}/chat/searchChats`, {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        credentials: 'include'
+        credentials: 'include',
+        body: JSON.stringify({ query: query}),
     })
     .then(response => {
         console.log("RESPONSE:");
@@ -381,7 +416,7 @@ const searchMsgs = () => {
 
     const query = msgSearch.value;
     fetch(`${URL}/chat/search`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
@@ -404,8 +439,8 @@ const searchMsgs = () => {
     .then(data => {
         console.log(data);
         if (data.success){
-            const chats = data.data;
-            updateChats(chats);
+            const messages = data.data;
+            updateChatMessages(messages);
             return;
         }
         else return alert(data.error);
@@ -415,6 +450,77 @@ const searchMsgs = () => {
         //return alert("Something went wrong :(");
     });
 }
+
+const clearMsgs = () => {
+    allMessages = [];
+    fetch(`${URL}/chat//clear_chat/${currentChat}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        console.log("RESPONSE:");
+        console.log(response);
+        if (!response.ok) {
+            return alert("Failed to clear chat :(");
+        } 
+
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        if (data.success){
+            messageList.innerHTML = "";
+            return;
+        }
+        else return alert(data.error);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+const sendAttachment = (file, type) => {
+    if(currentChat == 0) return alert("Please choose a chat.");
+    console.log("file: ");
+    console.log(file);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+    fetch(`${URL}/chat/sendAttachment/${currentChat}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: formData,
+    })
+    .then(response => {
+        console.log("RESPONSE:");
+        console.log(response);
+        if (!response.ok) {
+            return alert("Failed to send attachment :(");
+        } 
+
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        if (data.success){
+            console.log(data.data);
+            //socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender})
+            socket.emit("attachment", {data: data.message, time: data.data.time, sender: data.data.sender, type: type})
+            return;
+        }
+        else return alert(data.error);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
 
 const userOffline = () => {
     socket.emit("offline", user);
@@ -472,8 +578,23 @@ if(sendMsg){
     
     //window.addEventListener('load', getChats());
     //window.addEventListener('load', getProfile());
+
+    document.getElementById("clearBtn").addEventListener("click", clearMsgs);
+    document.getElementById("imgBtn").addEventListener("click", () => {
+        document.getElementById('imgInput').click();
+    });
+    document.getElementById("fileBtn").addEventListener("click", () => {
+        document.getElementById('fileInput').click();
+    });
+    document.getElementById('imgInput').addEventListener('change', (event) => {
+        const selectedFile = event.target.files[0];
+        if (selectedFile) sendAttachment(selectedFile, "image");
+    });
+    document.getElementById('fileInput').addEventListener('change', (event) => {
+        const selectedFile = event.target.files[0];
+        if (selectedFile) sendAttachment(selectedFile, "file");
+    })
     sendMsg.addEventListener('click', messageSubmitHandler);
-    
     document.getElementById("searchBtn1").addEventListener("click", searchChats);
     chatsSearch.addEventListener("input", searchChats);
     msgSearch.addEventListener("input", searchMsgs);
@@ -483,11 +604,13 @@ if(sendMsg){
         searching = !searching;
 
         if (searching) {
+            allMessages = messageList;
             iconElement.classList.remove("fa-search");
             iconElement.classList.add("fa-comment");
             document.getElementById("searchBlock").style.display = "flex";
             bottom.style.display = "none";
         } else {
+            //messageList = allMessages;
             iconElement.classList.remove("fa-comment");
             iconElement.classList.add("fa-search");
             document.getElementById("searchBlock").style.display = "none";

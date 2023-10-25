@@ -12,6 +12,7 @@ import { authenticate } from "./middleware/auth/authenticate.js";
 import session from "express-session";
 import path from "path";
 import { changeStatus } from "./controllers/user.js";
+import { error404Handler } from "./middleware/errorHandling.js";
 
 var app = express();
 //app.use(express.static("client"));
@@ -85,20 +86,23 @@ io.on("connection", (socket: Socket) => {
   //done
   socket.on("message", (message: any) => {
     if (socket.data.room) {
-      //.to(socket.data.room).
-      const data = {
-        user: message.sender,
-        message: message.data,
-        sentAt: message.time
-      };
-      console.log(data)
-      console.log("Room: " + socket.data.room);
-      console.log("USER: " + socket.data.user);
       io.to(socket.data.room).emit("message", {
         user: message.sender,
         message: message.data,
         sentAt: message.time,
         chat: socket.data.room
+      });
+    } else { console.log("NOT IN ROOM"); socket.emit("message", "Not in room.");}
+  });
+
+  socket.on("attachment", (file: any) => {
+    if (socket.data.room) {
+      io.to(socket.data.room).emit("attachment", {
+        sender: file.sender,
+        message: file.data,
+        sentAt: file.time,
+        chat: socket.data.room,
+        type: file.type
       });
     } else { console.log("NOT IN ROOM"); socket.emit("message", "Not in room.");}
   });
@@ -132,6 +136,7 @@ io.on("connection", (socket: Socket) => {
     console.log("remaining users: ", users);
   });
 });
+app.use(error404Handler);
 
 server.listen(PORT, () => {
   console.log("SERVER IS RUNNING");

@@ -314,3 +314,22 @@ body{
     height: 100vh; /* Ensures full viewport height */
     color: slategrey;
   }
+
+  .chat-message {
+    display: flex;
+    align-items: flex-start;
+  }
+  
+  .chat-image {
+    max-width: 100px; /* Adjust the image size as needed */
+    max-height: 100px;
+  }
+
+  .chat-file {
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+  }

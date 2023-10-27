@@ -132,6 +132,11 @@ const updateChats = (chats) => {
 
 const updateChatMessages = (messages) => {
     messageList.innerHTML = "";
+    if(messages.length < 1){
+        title2.style.display = "block";
+        title2.innerText = "No messages to show here."
+        return;
+    }
     for(let i = 0; i < messages.length; i++){
         if(messages[i].type == "image" || messages[i].type =="file")
             addAttachment(messages[i]);
@@ -283,7 +288,7 @@ function messageSubmitHandler(e) {
     console.log("SENDING MESSAGE...");
     if(currentChat == 0) return alert("Please choose a chat.");
     let message = chatboxinput.value;
-
+    if(message.length < 1) return;
     fetch(`${URL}/chat/sendMessage/${currentChat}`, {
         method: 'POST',
         headers: {
@@ -500,7 +505,7 @@ const sendAttachment = (file, type) => {
         console.log(data);
         if (data.success){
             console.log(data.data);
-            sessionStorage.setItem('sentFile', true);
+            sessionStorage.setItem('sentFile', "yes");
             return socket.emit("attachment", {data: data.message, time: data.data.time, sender: data.data.sender, type: type})
         }
         else return alert(data.error);
@@ -554,19 +559,23 @@ if(logout){
     })
 }
 
-
 if(sendMsg){    
     const displayMsgs = sessionStorage.getItem('sentFile');
-    if(displayMsgs) {
+    if(displayMsgs == "yes") {
+        console.log("displayMsgs: ");
+        console.log(displayMsgs);
         const chatId = sessionStorage.getItem('currentChat');
         getMessages(chatId);
-        sessionStorage.setItem('sentFile', false);
+        sessionStorage.setItem('sentFile', "no");
+        title2.style.display = "none";
+        topHeading.style.display = "flex";
+        bottom.style.display = "block";
     }
     // window.addEventListener('blur', () => {
     //     setTimeout(userOffline, 60000);
     //   });
     window.addEventListener('focus', userOnline);
-    window.addEventListener('blur', userOffline);
+    //window.addEventListener('blur', userOffline);
     getChats();
     getProfile();
     //window.addEventListener('load', getChats());
@@ -625,4 +634,4 @@ if(sendMsg){
 }
 
 if(login)
-login.addEventListener('submit', loginHandler)
+login.addEventListener('submit', loginHandler);

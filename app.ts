@@ -78,7 +78,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("message", (message: any) => {
     if (socket.data.room) {
       const messageData = {
-        user: message.sender,
+        sender: message.sender,
         message: message.data,
         sentAt: message.time,
         chat: socket.data.room,

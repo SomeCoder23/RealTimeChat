@@ -310,7 +310,7 @@ function messageSubmitHandler(e) {
         console.log(data);
         if (data.success){
             console.log(data.data);
-            socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender})
+            socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender}, user);
             chatboxinput.value = ""
             return;
         }

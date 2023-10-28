@@ -11,7 +11,7 @@ import dataSource from "./db/dataSource.js";
 import { authenticate } from "./middleware/auth/authenticate.js";
 import session from "express-session";
 import path from "path";
-import { changeStatus } from "./controllers/user.js";
+import { changeStatus, getEmail } from "./controllers/user.js";
 import { error404Handler } from "./middleware/errorHandling.js";
 // import router from "./ses.js";
 import AWS from 'aws-sdk';
@@ -75,7 +75,7 @@ io.on("connection", (socket: Socket) => {
     await changeStatus("offline", username);
   })
   //done
-  socket.on("message", (message: any) => {
+  socket.on("message", (message: any, username: string) => {
     if (socket.data.room) {
       const messageData = {
         sender: message.sender,
@@ -85,7 +85,7 @@ io.on("connection", (socket: Socket) => {
       };
       
       io.to(socket.data.room).emit("message", messageData);
-  
+      const email = getEmail(username);
       const emailParams: AWS.SES.SendEmailRequest = {
         Source: 'realtimechatapp7@gmail.com', 
         Destination: {

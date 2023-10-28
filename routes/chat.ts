@@ -68,7 +68,6 @@ router.put("/changeStatus", changeChatStatus);
 
 //DELETE ROUTES
 router.delete("/delete_message/:messageId", deleteMessage);
-//the same as leave chat, should probably change one... :(
-router.delete("/delete_chat/:chatId", leaveRoom);
+
 
 export default router;

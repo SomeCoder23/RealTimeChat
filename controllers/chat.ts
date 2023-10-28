@@ -435,16 +435,16 @@ const changeFriendStatus = async ( req: express.Request, res: express.Response, 
     }
 
     relationship[0].save().then((response) => {
-      res.status(201).json({success: true, msg: "Status updated successfully!", data: relationship[0]});
+      res.status(200).json({success: true, msg: "Status updated successfully!", data: relationship[0]});
     }).catch(error => {
       console.error(error);
       res.status(500).json({success: false, error: 'Problem occurred'});
     });
 
-  } else res.status(401).json({success: false, error: 'Contact does not exist. Would you like to create one?'});
+  } else res.status(409).json({success: false, error: 'Contact does not exist. Would you like to create one?'});
 
   } else{
-    res.status(401).json({success: false, error: 'Other user not found.'});
+    res.status(404).json({success: false, error: 'Other user not found.'});
   }
 
 }

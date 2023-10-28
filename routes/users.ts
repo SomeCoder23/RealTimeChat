@@ -87,14 +87,12 @@ router.get('/profile/:userId', authenticate, async (req, res) =>{
     }
 }); 
 
+
+
 //PUT ROUTES
 router.put('/profile', authenticate, updateUserProfile); 
 router.put('/change_password', authenticate, changePassword);   
 router.put('/change_relationship', authenticate, changeFriendStatus); 
-
-//DELETE ROUTES
-//doesn't work properly :(
-router.delete('/deleteAccount', authenticate, deleteAccount);
 
 
 export default router;

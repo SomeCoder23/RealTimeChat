@@ -57,9 +57,9 @@ router.post("/leave_chat/:chatId", leaveRoom);
 
 //GET ROUTES
 
-router.get("/", (req, res, next) => getChats(req, res, next, res.locals.user));
+router.get("/", getChats);
 router.get("/chatInfo/:chatId", getGroupInfo);
-router.get("/conversations", (req, res, next) => getChats(req, res, next, res.locals.user));
+router.get("/conversations", getChats);
 router.get("/getMessages/:chatId", getChatMessages);
 router.get("/history/:chatId", getHistory);
 
@@ -68,7 +68,6 @@ router.put("/changeStatus", changeChatStatus);
 
 //DELETE ROUTES
 router.delete("/delete_message/:messageId", deleteMessage);
-//the same as leave chat, should probably change one... :(
-router.delete("/delete_chat/:chatId", leaveRoom);
+
 
 export default router;

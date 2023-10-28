@@ -7,7 +7,6 @@ const authenticate = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  console.log("Inside AUTHENTICATE ");
   const token = req.headers['authorization'] || req.cookies['token'] || '';  
   let tokenIsValid;
   try {
@@ -15,7 +14,6 @@ const authenticate = async (
   } catch (error) { console.log(error);}
 
   if (tokenIsValid) {
-    console.log("TOKEN IS VALID");
     const decoded = jwt.decode(token, { json: true });
     const user = await User.findOneBy({ username: decoded?.username || '' })
     res.locals.user = user;

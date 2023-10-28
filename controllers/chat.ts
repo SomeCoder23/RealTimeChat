@@ -133,7 +133,6 @@ const getChatMessages = async ( req: express.Request, res: express.Response, nex
 
   if(chat){
     const messages = chat.messages.filter(message => message.timeSent > new Date(date.getTime() - 24 * 60 * 60 * 1000))
-    console.log("Inside....");
     //format messages so to only send: sender's username, message content, and time sent
     const formatedMessages = await formatMessages(messages);
     res.status(200).json({success: true, data: formatedMessages});
@@ -168,14 +167,15 @@ const getGroupInfo = async ( req: express.Request, res: express.Response, next: 
 
 //NOTE: change the code for attachments so it uploads it to s3 not folder uploads folder
 const sendMessage = async ( req: express.Request, res: express.Response, next: express.NextFunction, type: string) => {
+  console.log("SENDING....SENDING....");
   const user = res.locals.user;
   const id = Number(req.params.chatId);
   let message = req.body.content;
-  console.log("SENDING....SENDING....");
+  let newMsg : Message;
   //checks if chat exists 
   const chat:any = await validate(id, user);
   if(chat){
-    const currentTime = new Date(); 
+    try {const currentTime = new Date(); 
 
     if(type == "attachment"){
       //saves attachment to file on server
@@ -191,13 +191,17 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
       console.log("FILE:", fileURL);
     }
 
-    const newMsg = Message.create({
+     newMsg = Message.create({
       content: message,
       timeSent: currentTime,
       chat_id: chat.chat.id,
       type: type.toLowerCase() === 'image' ? "image" : type.toLowerCase() == "file"? "file": "text",
       sender: user.id
-    }); 
+    }); } catch (error) {
+      console.error(error);
+      res.status(500).json({success: false, error: 'Problem Occurred'});
+      return;
+    }
     
     try {
       db.dataSource.manager.transaction(async (transaction) => {
@@ -222,7 +226,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
       });
 
     } catch (error) {
-      console.error(error);
+      console.log(error);
       res.status(500).json({success: false, error: 'Problem Occurred'});
       return;
     }
@@ -258,29 +262,24 @@ const leaveRoom = async ( req: express.Request, res: express.Response, next: exp
   removeParticipant(req, res, next);
 }
 
-const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction, user: any) => {
-  //const user = res.locals.user;
+const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const user = res.locals.user;
   console.log("INSIDDEEE GET CHATS...");
   try{
         const userChats = await UserChat.find({where: {user: user}, order: {
           lastEntry: "DESC" 
         }});
         if(userChats){
-        console.log("USER CHATS: ");
-        console.log(userChats);
         let formatedChats = [];
         for(let i = 0; i < userChats.length; i++){
           const chatty = await formatChatInfo(userChats[i], user);
           formatedChats.push(chatty);
         }
-        console.log("READY TO SEND....");
-        //return 200;
         res.status(200).json({success: true, totalChats: formatedChats.length, data: formatedChats});
       }
     
       } catch(error){
         console.log(error);
-        //return error;
         res.status(500).json({success: false, error: "Problem occurred"});
 
       }
@@ -436,16 +435,16 @@ const changeFriendStatus = async ( req: express.Request, res: express.Response, 
     }
 
     relationship[0].save().then((response) => {
-      res.status(201).json({success: true, msg: "Status updated successfully!", data: relationship[0]});
+      res.status(200).json({success: true, msg: "Status updated successfully!", data: relationship[0]});
     }).catch(error => {
       console.error(error);
       res.status(500).json({success: false, error: 'Problem occurred'});
     });
 
-  } else res.status(401).json({success: false, error: 'Contact does not exist. Would you like to create one?'});
+  } else res.status(409).json({success: false, error: 'Contact does not exist. Would you like to create one?'});
 
   } else{
-    res.status(401).json({success: false, error: 'Other user not found.'});
+    res.status(404).json({success: false, error: 'Other user not found.'});
   }
 
 }

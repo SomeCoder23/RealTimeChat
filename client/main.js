@@ -41,17 +41,13 @@ socket.on("message", (message) => {
 socket.on("attachment", file => {
     allMessages.push(file);
     if(searching) return;
-    if(currentChat == message.chat)  
+    if(currentChat == file.chat)  
     addAttachment(file);
 })
 
-
 socket.on('users', function (_users) {
     console.log(_users + " connected");
-    // users = _users
-    // updateUsers();
 });
-
 
 const getProfile = () => {
     if(username !== null){
@@ -126,6 +122,7 @@ const updateChats = (chats) => {
           newChat.classList.add('active');
           chatName.innerText = chats[i].name;
           currentChat = chats[i].id;
+          sessionStorage.setItem('currentChat', chats[i].id);
           socket.emit("joinRoom", chats[i].id);
         });
       
@@ -135,6 +132,11 @@ const updateChats = (chats) => {
 
 const updateChatMessages = (messages) => {
     messageList.innerHTML = "";
+    if(messages.length < 1){
+        title2.style.display = "block";
+        title2.innerText = "No messages to show here."
+        return;
+    }
     for(let i = 0; i < messages.length; i++){
         if(messages[i].type == "image" || messages[i].type =="file")
             addAttachment(messages[i]);
@@ -286,7 +288,7 @@ function messageSubmitHandler(e) {
     console.log("SENDING MESSAGE...");
     if(currentChat == 0) return alert("Please choose a chat.");
     let message = chatboxinput.value;
-
+    if(message.length < 1) return;
     fetch(`${URL}/chat/sendMessage/${currentChat}`, {
         method: 'POST',
         headers: {
@@ -308,7 +310,7 @@ function messageSubmitHandler(e) {
         console.log(data);
         if (data.success){
             console.log(data.data);
-            socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender})
+            socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender}, user);
             chatboxinput.value = ""
             return;
         }
@@ -485,17 +487,13 @@ const sendAttachment = (file, type) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", type);
-    fetch(`localhost:5000/chat/sendAttachment/${currentChat}`, {
+    fetch(`${URL}/chat/sendAttachment/${currentChat}`, {
         method: 'POST',
-       // mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         credentials: 'include',
         body: formData,
     })
     .then(response => {
-        console.log("RESPONSE:");
+        console.log("FILE RESPONSE:");
         console.log(response);
         if (!response.ok) {
             return alert("Failed to send attachment :(");
@@ -507,14 +505,14 @@ const sendAttachment = (file, type) => {
         console.log(data);
         if (data.success){
             console.log(data.data);
-            //socket.emit("message", {data: message, time: data.data.time, sender: data.data.sender})
-            socket.emit("attachment", {data: data.message, time: data.data.time, sender: data.data.sender, type: type})
-            return;
+            sessionStorage.setItem('sentFile', "yes");
+            return socket.emit("attachment", {data: data.message, time: data.data.time, sender: data.data.sender, type: type})
         }
         else return alert(data.error);
     })
     .catch(error => {
         console.error('Error:', error);
+        return alert("Ooops couldn't send attachment.");
     });
 }
 
@@ -526,8 +524,6 @@ const userOnline = () => {
     if(user)
         socket.emit("online", user);
 }
-
-
 
 if(logout){
     logout.addEventListener('click', () => {
@@ -563,19 +559,28 @@ if(logout){
     })
 }
 
-
 if(sendMsg){    
+    const displayMsgs = sessionStorage.getItem('sentFile');
+    if(displayMsgs == "yes") {
+        console.log("displayMsgs: ");
+        console.log(displayMsgs);
+        const chatId = sessionStorage.getItem('currentChat');
+        getMessages(chatId);
+        sessionStorage.setItem('sentFile', "no");
+        title2.style.display = "none";
+        topHeading.style.display = "flex";
+        bottom.style.display = "block";
+    }
     // window.addEventListener('blur', () => {
     //     setTimeout(userOffline, 60000);
     //   });
     window.addEventListener('focus', userOnline);
-    window.addEventListener('blur', userOffline);
+    //window.addEventListener('blur', userOffline);
     getChats();
     getProfile();
-    
     //window.addEventListener('load', getChats());
     //window.addEventListener('load', getProfile());
-
+    const hiddenBtn = document.getElementById("submitAttachment");
     document.getElementById("clearBtn").addEventListener("click", clearMsgs);
     document.getElementById("imgBtn").addEventListener("click", () => {
         document.getElementById('imgInput').click();
@@ -584,12 +589,20 @@ if(sendMsg){
         document.getElementById('fileInput').click();
     });
     document.getElementById('imgInput').addEventListener('change', (event) => {
+        event.preventDefault();
         const selectedFile = event.target.files[0];
-        if (selectedFile) sendAttachment(selectedFile, "image");
+        if (selectedFile) {
+            hiddenBtn.click();
+            sendAttachment(selectedFile, "image");
+        }
     });
     document.getElementById('fileInput').addEventListener('change', (event) => {
+        event.preventDefault();
         const selectedFile = event.target.files[0];
-        if (selectedFile) sendAttachment(selectedFile, "file");
+        if (selectedFile) {
+            hiddenBtn.click();
+            sendAttachment(selectedFile, "file");
+        }
     })
     sendMsg.addEventListener('click', messageSubmitHandler);
     document.getElementById("searchBtn1").addEventListener("click", searchChats);
@@ -615,8 +628,10 @@ if(sendMsg){
             bottom.style.display = "block";
           }
     });
+    document.getElementById("attachmentsForm").addEventListener("submit", e =>{
+        e.preventDefault();
+    })
 }
 
 if(login)
-login.addEventListener('submit', loginHandler)
-
+login.addEventListener('submit', loginHandler);

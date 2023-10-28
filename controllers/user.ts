@@ -13,7 +13,7 @@ const createUser = async ( req: express.Request, res: express.Response, next: ex
   const email = req.body.email;
   const user = await User.findOneBy({username});
   if(user){
-    res.status(400).json({success: false, error: "Username already in use."});
+    res.status(409).json({success: false, error: "Username already in use."});
     return;
   }
 
@@ -120,7 +120,7 @@ const login = async ( req: express.Request, res: express.Response, next: express
        res.status(200).json({ success: true, msg: "Successfully logged in!" , token: token}).send();
         
       } else {
-        res.status(500).json({success: false, error: " Invalid Username or password!"});
+        res.status(400).json({success: false, error: " Invalid Username or password!"});
       }
     } catch (error) {
       console.log(error);
@@ -142,7 +142,7 @@ const changePassword = async ( req: express.Request, res: express.Response, next
                
         user.password = await bcrypt.hash(passwords.new, 10);
         user.save().then(() => {
-          res.status(201).json({success: true, msg: "Password Successfully Updated"})
+          res.status(200).json({success: true, msg: "Password Successfully Updated"})
         }).catch(error => {
           console.error(error);
           res.status(500).json({success: false, error: 'A problem occurred :('});
@@ -296,6 +296,13 @@ const formatContacts = async (contacts: Contacts[]) => {
   return formatedContacts;
 }
 
+const getEmail = async(username: string) => {
+  const user = await User.findOneBy({username});
+  if(user){
+    return user.email;
+  }
+}
+
 //<><><><><><><><><><><>><><><><><><><><><><><><><><><><><><><<><<><<<>>>
 //FOR TESTING (SAME AS ABOVE BUT WITHOUT THE RESPONSE AND REQUEST OBJECTS):
 
@@ -347,5 +354,6 @@ export {
   changeStatus,
   searchUsers,
   updateUserProfileTEST,
-  getContactsTEST
+  getContactsTEST,
+  getEmail
 };

@@ -11,7 +11,8 @@ import dataSource from "./db/dataSource.js";
 import { authenticate } from "./middleware/auth/authenticate.js";
 import session from "express-session";
 import path from "path";
-import { changeStatus, getEmail } from "./controllers/user.js";
+import { changeStatus} from "./controllers/user.js";
+import { getEmails } from "./controllers/chat.js";
 import { error404Handler } from "./middleware/errorHandling.js";
 // import router from "./ses.js";
 import AWS from 'aws-sdk';
@@ -75,7 +76,7 @@ io.on("connection", (socket: Socket) => {
     await changeStatus("offline", username);
   })
   //done
-  socket.on("message", (message: any, username: string) => {
+  socket.on("message", async (message: any, username: string) => {
     if (socket.data.room) {
       const messageData = {
         sender: message.sender,
@@ -85,31 +86,36 @@ io.on("connection", (socket: Socket) => {
       };
       
       io.to(socket.data.room).emit("message", messageData);
-      const email = getEmail(username);
-      const emailParams: AWS.SES.SendEmailRequest = {
-        Source: 'realtimechatapp7@gmail.com', 
-        Destination: {
-          ToAddresses: ['raghadtest123@gmail.com'], 
-        },
-        Message: {
-          Subject: {
-            Data: 'New Message Notification',
+      const emails = await getEmails(socket.data.room, message.sender);
+
+      for(let i = 0; i < emails.length; i++){
+        console.log("Sending to..." + emails[i]);
+        const emailParams: AWS.SES.SendEmailRequest = {
+          Source: 'realtimechatapp7@gmail.com', 
+          Destination: {
+            ToAddresses: [emails[i]], 
           },
-          Body: {
-            Text: {
-              Data: `New message from ${message.sender}: ${message.data}`,
+          Message: {
+            Subject: {
+              Data: 'New Message Notification',
+            },
+            Body: {
+              Text: {
+                Data: `New message from ${message.sender}: ${message.data}`,
+              },
             },
           },
-        },
-      };
+        };
+        
+        ses.sendEmail(emailParams, (err, data) => {
+          if (err) {
+            console.error("Error sending email:", err);
+          } else {
+            console.log("Email sent:", data);
+          }
+        });
+      }
   
-      ses.sendEmail(emailParams, (err, data) => {
-        if (err) {
-          console.error("Error sending email:", err);
-        } else {
-          console.log("Email sent:", data);
-        }
-      });
     } else {
       console.log("NOT IN ROOM");
       socket.emit("message", "Not in room.");

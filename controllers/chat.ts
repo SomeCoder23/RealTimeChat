@@ -522,19 +522,25 @@ else res.status(400).json({success: false, error: "Invalid chat."})
 
 }
 
+const getEmails = async (id: number, username: string) => {
+  const chat: any = await Chat.findOneBy({id});
+  if(chat){
+  let userChats : any = await UserChat.find({where: {chat: chat}});
+  if(userChats){
+        userChats = userChats.filter((user: any) => user.user.username != username); 
+        const emails = userChats.map((user: any) => user.user.email);
+        return emails;
+  }}
+  return false; 
+}
 
 //checks if chat exists and user is a participant
 const validate = async (id: number, user: any) => {
-  //checks if chat exists 
   const chat: any = await Chat.findOneBy({id});
   if(chat){
   const userChat = await UserChat.findOne({where: {chat: chat, user: user}});
   if(userChat){
-    //then checks if current user is a participant
-    // for (const participant of chat.participants){
-    //   if(participant.id == user.id)
         return userChat;
-    //} 
   }}
   return false; 
 }
@@ -550,6 +556,7 @@ const formatChatInfo = async (chat: any, user: User) => {
     id: chat.chat.id,
     name: chat.name,
     description: chat.chat.description,
+    type: chat.chat.type,
     status: isOnline.length > 0? "online": "offline",
     totalParticipants: usernames.length, 
     createdAt: chat.chat.createdAt,
@@ -613,5 +620,6 @@ export {
   searchMessages,
   searchChats,
   changeChatStatus,
-  getChatsTEST
+  getChatsTEST,
+  getEmails
 };

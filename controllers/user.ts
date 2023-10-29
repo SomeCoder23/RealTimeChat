@@ -296,13 +296,6 @@ const formatContacts = async (contacts: Contacts[]) => {
   return formatedContacts;
 }
 
-const getEmail = async(username: string) => {
-  const user = await User.findOneBy({username});
-  if(user){
-    return user.email;
-  }
-}
-
 //<><><><><><><><><><><>><><><><><><><><><><><><><><><><><><><<><<><<<>>>
 //FOR TESTING (SAME AS ABOVE BUT WITHOUT THE RESPONSE AND REQUEST OBJECTS):
 
@@ -354,6 +347,5 @@ export {
   changeStatus,
   searchUsers,
   updateUserProfileTEST,
-  getContactsTEST,
-  getEmail
+  getContactsTEST
 };

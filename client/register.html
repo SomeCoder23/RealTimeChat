@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles1.css">
+    <link rel="icon" href="images/feedback_8914317.png" type="image/png">
     <title>Chatty</title>
     <style>
         body {
@@ -92,7 +93,7 @@
     <h1>Welcome to Chatty!</h1>
     <div class="login-container">
         <h1>Sign Up</h1>
-        <form id="login-form">
+        <form id="register-form">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             
@@ -126,7 +127,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
     <script>
 
-        const registerForm = document.getElementById("register");
+        const registerForm = document.getElementById("register-form");
         const toast = document.getElementById("toast");
 
         registerForm.addEventListener('submit', function (event) {
@@ -152,10 +153,10 @@
             body: JSON.stringify(data),
             })
             .then(response => {
-                console.log(response);
+                /* console.log(response);
                 if (!response.ok) {
                     return alert("Failed to register :(");
-                } 
+                }  */
 
                 return response.json();
             })
@@ -165,7 +166,7 @@
                     window.location.href = "/client/index.html"; 
                     return;
                 }
-                else return alert("Failed to register :(");
+                else return toast.innerText = data.error;
             })
             .catch(error => {
                 console.error('Error:', error);

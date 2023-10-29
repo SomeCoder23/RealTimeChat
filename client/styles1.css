@@ -4,6 +4,7 @@ body{
     padding-top: 56px;
     background: linear-gradient(to top, #f88f92, #f3d8d1);
     background-repeat: no-repeat;
+    background-attachment: fixed;
 
 }
 

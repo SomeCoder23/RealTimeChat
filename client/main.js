@@ -26,6 +26,7 @@ const socket = io(URL);
 let allMessages = []
 let orderedChats = [];
 let currentChat = 0;
+let chatType = "";
 let user;
 let searching = false;
 
@@ -122,6 +123,7 @@ const updateChats = (chats) => {
           newChat.classList.add('active');
           chatName.innerText = chats[i].name;
           currentChat = chats[i].id;
+          chatType = chats[i].type;
           sessionStorage.setItem('currentChat', chats[i].id);
           socket.emit("joinRoom", chats[i].id);
         });
@@ -274,10 +276,16 @@ function addMessage(message) {
     
     let newMsg = document.createElement("li");
     newMsg.classList.add("clearfix");
+    let content;
+    if(chatType == "group"){
+        content = `<b> ${message.sender} </b> <br> ${message.message}`; 
+    }
+    else content =  message.message;
+
     newMsg.innerHTML += `<div class="message-data ${align}">
     <span class="message-data-time">${message.sentAt}</span>
 </div>
-<div class='${type}'>${message.message}</div>`;
+<div class='${type}'>${content}</div>`;
     messageList.append(newMsg);   
      
 }

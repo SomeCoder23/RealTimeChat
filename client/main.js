@@ -279,9 +279,9 @@ function addMessage(message) {
 </div>
 <div class='${type}'>${message.message}</div>`;
     messageList.append(newMsg);   
-    
-    
+     
 }
+
 
 function messageSubmitHandler(e) {
     e.preventDefault();

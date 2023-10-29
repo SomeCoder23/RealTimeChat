@@ -21,7 +21,7 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
 
   try {
     //if its a group chat
-    if (!req.body.username) {
+    if (!req.body.username || !req.params.username) {
       desc = req.body.description;
       chatName = req.body.name;
       type = "group";
@@ -48,7 +48,7 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
 
       } catch(err){
         console.log(err);
-        res.status(401).json({success: false, error: "Participant(s) username invalid"});
+        res.status(400).json({success: false, error: "Participant(s) username invalid"});
         return;
       }
     } else {
@@ -139,7 +139,7 @@ const getChatMessages = async ( req: express.Request, res: express.Response, nex
     //res.sendFile(__dirname + '/client/main.html');
   }
   else {
-    res.status(401).json({success: false, error: 'Chat not found'});
+    res.status(404).json({success: false, error: 'Chat not found'});
     //res.render('chats', { err: "not found" });
 }
   
@@ -465,14 +465,14 @@ const changeChatStatus = async ( req: express.Request, res: express.Response, ne
     }
 
     userChat.save().then((response) => {
-      res.status(201).json({success: true, msg: "Status updated successfully!", data: userChat});
+      res.status(200).json({success: true, msg: "Status updated successfully!", data: userChat});
     }).catch(error => {
       console.error(error);
       res.status(500).json({success: false, error: 'Problem occurred'});
     });
 
   } else{
-    res.status(401).json({success: false, error: 'Other user not found.'});
+    res.status(404).json({success: false, error: 'Chat not found.'});
   }
 
 }

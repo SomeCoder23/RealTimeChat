@@ -4,49 +4,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles1.css">
     <title>Chatty</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to top, #f6a7aa, #faece8);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: #f4676c;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            text-align: center;
+            color: #ff4447;
+            margin-bottom: 10px;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            border: 2px solid #f05157; /* Border color */
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc; /* Input border color */
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #f2888b;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #f25257;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .signup-link a {
+            color: #f4676c;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        p {
+            color: red;
+            font-size: small;
+        }
+    </style>
 </head>
 
 <body>
 
-    <div class="backdrop">
+    <h1>Welcome to Chatty!</h1>
+    <div class="login-container">
+        <h1>Sign Up</h1>
+        <form id="login-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label>Full Name:</label>
+            <input type="text" id="fullName" name="fullName" required>
 
+            <label>Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label>Birthday:</label>
+            <input type="date" id="birthday" name="birthday" required>
+
+            <label>Profile Bio (Optional):</label>
+            <input type="text" placeholder="Welcome to my profile!" id="bio" name="bio">
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <label>Password Confirmation:</label>
+            <input type="password" id="confirm" name="confirm" required>
+        
+            <p id="toast"></p>
+            <button type="submit">Register</button>
+        </form>
+
+        <div class="signup-link">
+            Already have an account? <a href="index.html">Login</a>
+        </div>
     </div>
-    <form class="modal" id="register">
-
-        <h1 id="title">Welcome</h1>
-        <br>
-        <p id="content">Enter Username</p>
-        <br>
-        <input placeholder="Username" type="text" id="username" name="username" required>
-        <br><p id="content">Enter your Full Name</p>
-        <br>
-        <input placeholder="Name" type="text" id="name" name="fullName" required>
-        <br>
-        <p id="content">Enter Birthday</p>
-        <br><input type="date" id="birthday" name="birthday" required>
-        <br>
-        <p id="content">Enter Profile Bio (optional)</p>
-        <br><input placeholder="Welcome to my profile!" type="text" id="bio" name="bio" required>
-        <br>
-        <p id="content">Enter Password</p>
-        <br><input placeholder="Password" type="password" id="password" name="password" required>
-        <br>
-        <p id="content">Enter Password Confirmation</p>
-        <br><input placeholder="Password Confirmation" type="password" id="confirm" name="confirm" required><br>
-        <button type="submit">Register</button>
-    </form>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
     <script>
 
         const registerForm = document.getElementById("register");
-
+        const toast = document.getElementById("toast");
 
         registerForm.addEventListener('submit', function (event) {
             event.preventDefault();
-
+            if(document.getElementById("password").value != document.getElementById("confirm").value){
+                toast.innerText = "Passwords do not match.";
+                return;
+            }
             const formData = new FormData(registerForm);
 
             const data = {};

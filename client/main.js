@@ -191,7 +191,7 @@ const getChats = () => {
         console.log("RESPONSE:");
         console.log(response);
         if(response.status == 401){
-            window.location.href = "/client/login.html";   
+            window.location.href = "/client/index.html";   
             return;
         }
         if (!response.ok) {
@@ -279,9 +279,9 @@ function addMessage(message) {
 </div>
 <div class='${type}'>${message.message}</div>`;
     messageList.append(newMsg);   
-    
-    
+     
 }
+
 
 function messageSubmitHandler(e) {
     e.preventDefault();
@@ -384,7 +384,7 @@ const searchChats = () => {
         console.log("RESPONSE:");
         console.log(response);
         if(response.status == 401){
-            window.location.href = "/client/login.html";   
+            window.location.href = "/client/index.html";   
             return;
         }
         if (!response.ok) {
@@ -423,7 +423,7 @@ const searchMsgs = () => {
         console.log("RESPONSE:");
         console.log(response);
         if(response.status == 401){
-            window.location.href = "/client/login.html";   
+            window.location.href = "/client/index.html";   
             return;
         }
         if (!response.ok) {
@@ -546,7 +546,7 @@ if(logout){
             console.log(data);
             if (data.success){
                 userOffline();
-                window.location.href = "/client/login.html";               
+                window.location.href = "/client/index.html";               
                 return;
             }
             else return alert(data.error);

@@ -30,7 +30,7 @@ const validateUser = (req: express.Request,
   }
   
 //   if (!['employee', 'employer'].includes(user.type)) {
-  //     errorList.push('User type unknown!');
+  //     errorList.push('User  type unknown!');
   //   }
   
   if (errorList.length) {

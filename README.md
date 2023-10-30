@@ -11,12 +11,3 @@ Explore a secure and dynamic real-time chat app that redefines communication. Ou
 
 ---
 
-### To implement this chat app we used:
-- Express + Node JS
-- TypeORM
-- Xampp
-- PostMan
-- Socket.io
-- AWS EC2
-- ASG + RDS
-- SES

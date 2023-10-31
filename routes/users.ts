@@ -6,7 +6,6 @@ import {
     login,
     logout,
     changePassword,
-    deleteAccount,
     getContacts,
     searchUsers
   } from '../controllers/user.js';
@@ -18,8 +17,6 @@ var router = express.Router();
 
 //POST ROUTES
 
-//something wrong with setting cookiesssssssssssssssssssssssssssssssssssssssssssss 
-//in the browser
 router.post('/login', validateLogin, login);
 router.post('/logout', authenticate, logout);
 router.post('/register', validateUser ,createUser);
@@ -29,14 +26,12 @@ router.post('/addContact/:username', authenticate, addContact);
 router.get('/', authenticate, getUsers);
 router.get('/contacts', authenticate, getContacts);
 router.get("/search/:query", searchUsers);
-router.get('/status/:id', authenticate, async (req, res) =>{
+router.get('/status/:username', authenticate, async (req, res) =>{
 
   //gets the presence status of the specified user 
   try{
-    const id = req.params.id;
-    const user = await User.findOne({
-        where: {id}
-    });
+    const username = req.params.username;
+    const user = await User.findOneBy({username});
     if (user) {
         res.status(200).json({success: true, data: user.profile.status});
       } else {
@@ -68,13 +63,11 @@ router.get('/profile', authenticate, async (req, res) =>{
     }
 });
 
-router.get('/profile/:userId', authenticate, async (req, res) =>{
+router.get('/profile/:username', authenticate, async (req, res) =>{
 
   try{
-    const id = req.params.userId;
-    const user = await User.findOne({
-        where: {id}
-    });
+    const username = req.params.username;
+    const user = await User.findOneBy({username});
     if (user) {
       res.status(200).json({success: true, data: user.profile});
     } else {

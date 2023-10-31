@@ -23,6 +23,12 @@ export class UserChat extends BaseEntity {
     default: 'normal'})
     status: "muted" | "normal" | 'blocked';
 
+    @Column({ 
+        type: 'enum',
+    enum: ['admin', 'participant'],
+    default: 'participant'})
+    role: 'admin' | 'participant';
+
     //  @OneToMany(() => Message, messages => messages.chat_id, {eager: true, nullable: true})
     //  messages: Message[];
 

@@ -6,7 +6,8 @@ import jwt from 'jsonwebtoken';
 import express from 'express';
 import { Contacts } from "../db/entities/Contacts.js";
 import "dotenv/config"
-import { ILike } from 'typeorm';
+import { ILike, In } from 'typeorm';
+import { UserChat } from '../db/entities/UserChat.js';
 
 const createUser = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
@@ -117,7 +118,7 @@ const login = async ( req: express.Request, res: express.Response, next: express
         sameSite: 'none',
         secure: true,
       });
-       res.status(200).json({ success: true, msg: "Successfully logged in!" , token: token}).send();
+       res.status(200).json({ success: true, msg: "Successfully logged in!"}).send();
         
       } else {
         res.status(400).json({success: false, error: " Invalid Username or password!"});
@@ -151,33 +152,6 @@ const changePassword = async ( req: express.Request, res: express.Response, next
       else res.status(400).json({success: false, error: 'Password incorrect'});
 }
 
-const deleteAccount = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // Delete all data related with this account from DB/AWS S3 etc...
-  const user = res.locals.user;
-    try {
-      await db.dataSource.manager.transaction(async (transaction) => {
-        const contacts = await Contacts.find({
-          where: [
-            { contact: user },
-            { user: user },
-          ],
-        });
-        const contactRemoval = contacts.map(async (contact) => {
-            await transaction.remove(Contacts, contact);
-        });
-
-        await Promise.all(contactRemoval);
-
-        await transaction.remove(User, user);
-    });
-
-    res.status(201).json({ success: true, msg: 'Account Deleted!' });
-     
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({success: false, error: 'Failed to delete account'});
-    }
-}
 
 const logout = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   
@@ -210,13 +184,14 @@ else res.status(500).json({ success: false, error: 'Logout failed' });
 }
 
 const getContacts = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const user = res.locals.user;
   const contacts = await Contacts.find({where: 
-    {user: res.locals.user}
+    {user: user}
   })
 
   //NOTE: if no user has no contacts yet -> send appropraite message.
   if(contacts){
-    const people = await formatContacts(contacts);
+    const people = await formatContacts(contacts, user);
     res.status(200).json({success: true, data: people});
   }
   else res.status(500).json({success: false, error: "Problem occurred"});
@@ -256,12 +231,24 @@ const searchUsers =  async ( req: express.Request, res: express.Response, next: 
   const query = req.params.query;
   let users;
   if(query.length < 1) users = await User.find(); 
+
   else users = await User.find({
     where: {username: ILike(`${query}%`)}
   });
+  
 
   if(users){
-    res.status(200).json({success: true, data: users})
+    let results;
+    if(users.length >= 1)
+     results = users.map(user => {
+      return {
+        username: user.username,
+        name: user.profile.fullName,
+        bio: user.profile.bio
+      }
+    });
+    else results = "No users found";
+    res.status(200).json({success: true, total: users.length, data: results})
   }
   else {
     res.status(500).json({success: false, error: "Problemo occurred."})
@@ -287,11 +274,24 @@ const changeStatus = async (status: string, username: string) => {
 
 }
 
-const formatContacts = async (contacts: Contacts[]) => {
-  const people = contacts.map(contact => contact.contact);
+const formatContacts = async (contacts: Contacts[], user: any) => {
+  const people: any = contacts.map(contact => contact.contact);
   let formatedContacts = [];
+  const userChats = await UserChat.find({where: {user: user}});
+  const chats = userChats.map(userchat => userchat.chat.id);
   for(let i = 0; i < contacts.length; i++){
-    formatedContacts.push({contact: people[i].username, relationship: contacts[i].relationshipStatus, started: contacts[i].createdAt})
+     //let commonChats: any = await UserChat.find({where: {user: people[i], chat: In(chats)}})
+     const userChats2 = await UserChat.find({where: {user: people[i]}});
+     const chats2 = userChats2.map(userchat => userchat.chat.id);
+     const chatIds = chats.filter(chat => chats2.includes(chat));
+     let commonChats: any = userChats2.filter(chat => chatIds.includes(chat.chat.id));
+    commonChats = commonChats.map((chats: any) => {
+      return {
+        name: chats.name,
+        status: chats.status
+      }
+    })
+    formatedContacts.push({contact: people[i].username, relationship: contacts[i].relationshipStatus, started: contacts[i].createdAt, commonChats: commonChats})
   }
   return formatedContacts;
 }
@@ -328,7 +328,7 @@ const getContactsTEST = async (user: any) => {
     {user: user}
   })
   if(contacts){
-    const people = await formatContacts(contacts);
+    const people = await formatContacts(contacts, user);
     return {status: 200, data: people}
   }
   else return {status: 500, error: "Problem occurred"}
@@ -341,7 +341,6 @@ export {
   login,
   logout,
   changePassword,
-  deleteAccount,
   getContacts,
   getUsers,
   changeStatus,

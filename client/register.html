@@ -145,8 +145,10 @@
             console.log("DATA: ");
             console.log(data);
 
-            fetch('http://www.localhost:5000/users/register', {
+            fetch('http://rs-lb-1696003056.eu-north-1.elb.amazonaws.com/users/register', {
             method: 'POST',
+            mode: 'no-cors',
+
             headers: {
                 'Content-Type': 'application/json',
             },

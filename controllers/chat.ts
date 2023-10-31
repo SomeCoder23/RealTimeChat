@@ -37,7 +37,14 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
           return;
         }
         participants = users;
-        participants.push(currentUser);
+        //participants.push(currentUser);
+        const adminUser = await UserChat.create({
+          name: chatName,
+          user: currentUser,
+          role: "admin"
+        });
+        userChats.push(adminUser);
+
         for(let i = 0; i < participants.length; i++){
           const userChat = await UserChat.create({
             name: chatName,
@@ -59,7 +66,7 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
         //check if there already exits a chat.
         const chats1 = await UserChat.find({where: {user: currentUser}})
         const filteredChats = chats1.filter(chat => {if (chat.chat.type === "1To1" && chat.name === user.username) return chat;});
-        // let chats2 = await UserChat.find({where: {user: user, chat: In(filteredChats)}})
+         //let chats2 = await UserChat.find({where: {user: user, chat: In(filteredChats)}})
          if(filteredChats.length > 0){
           res.status(409).json({success: false, error: "Chat already exists", data: filteredChats});
           return;
@@ -175,6 +182,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
   //checks if chat exists 
   const chat:any = await validate(id, user);
   if(chat){
+    if(chat.status == "blocked") return res.status(400).json({success: false, error: "Chat Blocked!"});
     try {const currentTime = new Date(); 
 
     if(type == "attachment"){
@@ -305,6 +313,8 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
   const chat:any = await validate(id, user);
   //ONLY add participants to group chat
   if(chat && chat.chat.type == "group"){
+    if(chat.role != "admin") return res.status(400).json({success: false, error: "This action is above you're privileges, little participant. You're not the admin of the group."});
+
     const newUser:any = await User.findOneBy({username});
     if(!newUser) {
       res.status(400).json({success: false, error: "Invalid participant username."});
@@ -338,6 +348,8 @@ const removeParticipant = async ( req: express.Request, res: express.Response, n
 
   const chat = await validate(id, user);
   if(chat  && chat.chat.type == "group"){
+    if(chat.role != "admin") return res.status(400).json({success: false, error: "This action is above you're privileges, little participant. You're not the admin of the group."});
+
     const oldUser = await User.findOneBy({username});
     if(oldUser){
       const userChat = await validate(id, oldUser);
@@ -401,7 +413,7 @@ const addContact = async ( req: express.Request, res: express.Response, next: ex
     try {
       db.dataSource.manager.transaction(async (transaction) => {
         await transaction.save(contact);
-        res.status(200).json({success: true, msg: "Added new contact!", data: contact});
+        res.status(200).json({success: true, msg: "Added new contact!"});
       });
     } catch (error) {
       console.error(error);
@@ -527,7 +539,7 @@ const getEmails = async (id: number, username: string) => {
   if(chat){
   let userChats : any = await UserChat.find({where: {chat: chat}});
   if(userChats){
-        userChats = userChats.filter((user: any) => user.user.username != username); 
+        userChats = userChats.filter((user: any) => user.user.username != username && user.status == "normal"); 
         const emails = userChats.map((user: any) => user.user.email);
         return emails;
   }}

@@ -29,7 +29,6 @@ const createUser = async ( req: express.Request, res: express.Response, next: ex
   db.dataSource.manager.transaction(async transaction => { 
         try
         {
-          //First: Creates User Profile and Saves it 
           const profile = Profile.create({
             fullName: req.body.fullName,
             birthday: req.body.birthday,
@@ -38,7 +37,6 @@ const createUser = async ( req: express.Request, res: express.Response, next: ex
           
           await transaction.save(profile);
           console.log("Saved Profile!");
-          //Second: Hashes password, creates new user and saves it.
           const hashedPassword = await bcrypt.hash(req.body.password, 10);
           const currentDate = new Date();
           const newUser = User.create({
@@ -49,31 +47,32 @@ const createUser = async ( req: express.Request, res: express.Response, next: ex
             profile: profile
           });
     
-const token=''
-const verificationLink: string = `http://localhost:5000/verify?token=${token}`;
+// const token=''
+// const verificationLink: string = `http://localhost:5000/verify?token=${token}`;
 
-const params: AWS.SES.SendEmailRequest = {
-  Destination: {
-    ToAddresses: [email]
-  },
-  Message: {
-    Body: {
-      Text: {
-        Data: `Click on the following link to verify your email: ${verificationLink}`
-      }
-    },
-    Subject: {
-      Data: 'Email Verification'
-    }
-  },
-  Source: 'realtimechatapp7@gmail.com'
-};
+// const params: AWS.SES.SendEmailRequest = {
+//   Destination: {
+//     ToAddresses: [email]
+//   },
+//   Message: {
+//     Body: {
+//       Text: {
+//         Data: `Click on the following link to verify your email: ${verificationLink}`
+//       }
+//     },
+//     Subject: {
+//       Data: 'Email Verification'
+//     }
+//   },
+//   Source: 'realtimechatapp7@gmail.com'
+// };
 
-// Send the email
-const sendPromise = ses.sendEmail(params).promise();
-await sendPromise;
+
+// // Send the email
+// const sendPromise = ses.sendEmail(params).promise();
+// await sendPromise;
           await transaction.save(newUser);
-          res.status(201).json({success: true, msg: "Successfully Registered!", data: newUser,token});
+          res.status(201).json({success: true, msg: "Successfully Registered!", data: newUser});
     
         } catch(error){
           console.log("###ERROR: ");

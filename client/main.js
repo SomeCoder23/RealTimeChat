@@ -27,12 +27,14 @@ let allMessages = []
 let orderedChats = [];
 let currentChat = 0;
 let chatType = "";
+let chatStatus = "normal";
 let user;
 let searching = false;
 
 
 socket.on("message", (message) => {
     //messages.push(message);
+    if(chatStatus == "blocked") return;
     allMessages.push(message);
     if(searching) return;
     if(currentChat == message.chat)
@@ -124,6 +126,7 @@ const updateChats = (chats) => {
           chatName.innerText = chats[i].name;
           currentChat = chats[i].id;
           chatType = chats[i].type;
+          chatStatus = chats[i].chatStatus;
           sessionStorage.setItem('currentChat', chats[i].id);
           socket.emit("joinRoom", chats[i].id);
         });

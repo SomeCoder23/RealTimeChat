@@ -76,51 +76,47 @@ io.on("connection", (socket: Socket) => {
     await changeStatus("offline", username);
   })
   //done
-  socket.on("message", async (message: any, username: string) => {
+  socket.on("message", (message: any) => {
     if (socket.data.room) {
       const messageData = {
-        sender: message.sender,
+        user: message.sender,
         message: message.data,
         sentAt: message.time,
         chat: socket.data.room,
       };
       
       io.to(socket.data.room).emit("message", messageData);
-      const emails = await getEmails(socket.data.room, message.sender);
-
-      for(let i = 0; i < emails.length; i++){
-        console.log("Sending to..." + emails[i]);
-        const emailParams: AWS.SES.SendEmailRequest = {
-          Source: 'realtimechatapp7@gmail.com', 
-          Destination: {
-            ToAddresses: [emails[i]], 
-          },
-          Message: {
-            Subject: {
-              Data: 'New Message Notification',
-            },
-            Body: {
-              Text: {
-                Data: `New message from ${message.sender}: ${message.data}`,
-              },
-            },
-          },
-        };
-        
-        ses.sendEmail(emailParams, (err, data) => {
-          if (err) {
-            console.error("Error sending email:", err);
-          } else {
-            console.log("Email sent:", data);
-          }
-        });
-      }
   
+      const emailParams: AWS.SES.SendEmailRequest = {
+        Source: 'realtimechatapp7@gmail.com', 
+        Destination: {
+          ToAddresses: ['raghadtest123@gmail.com'], 
+        },
+        Message: {
+          Subject: {
+            Data: 'New Message Notification',
+          },
+          Body: {
+            Text: {
+              Data: `New message from ${message.sender}: ${message.data}`,
+            },
+          },
+        },
+      };
+  
+      ses.sendEmail(emailParams, (err, data) => {
+        if (err) {
+          console.error("Error sending email:", err);
+        } else {
+          console.log("Email sent:", data);
+        }
+      });
     } else {
       console.log("NOT IN ROOM");
       socket.emit("message", "Not in room.");
     }
   });
+
 
   socket.on("attachment", (file: any) => {
     if (socket.data.room) {

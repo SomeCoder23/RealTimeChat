@@ -11,8 +11,8 @@ import { UserChat } from '../db/entities/UserChat.js';
 import AWS from 'aws-sdk';
 
 AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  accessKeyId: process.env.AWS_SES_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
   region: process.env.AWS_SES_REGION
 });
 const ses = new AWS.SES({ region: 'eu-north-1' });
@@ -22,7 +22,7 @@ const createUser = async ( req: express.Request, res: express.Response, next: ex
   const email = req.body.email;
   const user = await User.findOneBy({username});
   if(user){
-    res.status(409).json({success: false, error: "Username already in use."});
+    res.status(400).json({success: false, error: "Username already in use."});
     return;
   }
 
@@ -49,31 +49,8 @@ const createUser = async ( req: express.Request, res: express.Response, next: ex
             profile: profile
           });
     
-const token=''
-const verificationLink: string = `http://localhost:5000/verify?token=${token}`;
-
-const params: AWS.SES.SendEmailRequest = {
-  Destination: {
-    ToAddresses: [email]
-  },
-  Message: {
-    Body: {
-      Text: {
-        Data: `Click on the following link to verify your email: ${verificationLink}`
-      }
-    },
-    Subject: {
-      Data: 'Email Verification'
-    }
-  },
-  Source: 'realtimechatapp7@gmail.com'
-};
-
-// Send the email
-const sendPromise = ses.sendEmail(params).promise();
-await sendPromise;
           await transaction.save(newUser);
-          res.status(201).json({success: true, msg: "Successfully Registered!", data: newUser,token});
+          res.status(201).json({success: true, msg: "Successfully Registered!", data: newUser});
     
         } catch(error){
           console.log("###ERROR: ");

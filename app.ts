@@ -18,8 +18,8 @@ import { error404Handler } from "./middleware/errorHandling.js";
 import AWS from 'aws-sdk';
 
 AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  accessKeyId: process.env.AWS_SES_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
   region: process.env.AWS_SES_REGION
 });
 const ses = new AWS.SES({ region: 'eu-north-1' });

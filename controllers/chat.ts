@@ -68,7 +68,7 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
         const filteredChats = chats1.filter(chat => {if (chat.chat.type === "1To1" && chat.name === user.username) return chat;});
          //let chats2 = await UserChat.find({where: {user: user, chat: In(filteredChats)}})
          if(filteredChats.length > 0){
-          res.status(409).json({success: false, error: "Chat already exists", data: filteredChats});
+          res.status(409).json({success: false, error: "Chat already exists"});
           return;
         }
 
@@ -182,7 +182,7 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
   //checks if chat exists 
   const chat:any = await validate(id, user);
   if(chat){
-    if(chat.status == "blocked") return res.status(400).json({success: false, error: "Chat Blocked!"});
+    if(chat.status == "blocked") {return res.status(400).json({success: false, error: "Chat Blocked!"});}
     try {const currentTime = new Date(); 
 
     if(type == "attachment"){
@@ -332,12 +332,12 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
       chat: chat.chat
     })
       newParticipant.save().then(response => {
-      res.status(200).json({success: true, data: response, msg: `${username} added successfully.`});
+      res.status(200).json({success: true, msg: `${username} added successfully.`});
     }).catch(error => {
       console.log(error);
       res.status(500).json({success: false, error: "Problem occurred"});
     })
-  } else res.status(400).json({success: false, error: "Chat not found"});
+  } else res.status(400).json({success: false, error: "Group Chat not found"});
 }
 
 // //NOTE: maybe should add admin attribute to chat, and only allow admin to remove
@@ -354,6 +354,12 @@ const removeParticipant = async ( req: express.Request, res: express.Response, n
     if(oldUser){
       const userChat = await validate(id, oldUser);
       if(userChat){
+        if(oldUser.id == user.id){
+          const chatty: any = userChat.chat;
+          const users = await UserChat.find({where: {chat: chatty}});
+          users[0].role = "admin";
+          await users[0].save();
+        }
         await userChat.remove();
         res.status(201).json({success: true, msg: `${username} removed successfully`, data: response});
       } else {
@@ -362,7 +368,7 @@ const removeParticipant = async ( req: express.Request, res: express.Response, n
       }
     } else res.status(400).json({success: false, error: "Participant username invalid"});
 
-  } else res.status(400).json({success: false, error: "Chat or participant invalid"});
+  } else res.status(400).json({success: false, error: "Group Chat or participant invalid"});
 
 }
 
@@ -572,7 +578,8 @@ const formatChatInfo = async (chat: any, user: User) => {
     status: isOnline.length > 0? "online": "offline",
     totalParticipants: usernames.length, 
     createdAt: chat.chat.createdAt,
-    participants: usernames
+    participants: usernames,
+    chatStatus: chat.status
   };
 }
 
@@ -581,7 +588,7 @@ const formatMessages = async (messages: Message[]) => {
   const senders : any = messages.map(message => message.sender);
   let formatedMessages : any[] = [];
   for(let i = 0; i < messages.length; i++){
-    formatedMessages.push({sender: senders[i].username, message: messages[i].content, sentAt: messages[i].timeSent, type: messages[i].type});
+    formatedMessages.push({id: messages[i].id, sender: senders[i].username, message: messages[i].content, sentAt: messages[i].timeSent, type: messages[i].type});
   }
   return formatedMessages;
 }

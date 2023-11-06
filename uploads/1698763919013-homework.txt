@@ -1,0 +1,384 @@
+SQL> drop table student cascade constraints purge
+  2  
+SQL> drop table student cascade constraints purge;
+
+Table dropped.
+
+SQL> drop table teacher cascade constraints purge;
+
+Table dropped.
+
+SQL> drop table course cascade constraints purge;
+
+Table dropped.
+
+SQL> drop table transcript cascade constraints purge;
+
+Table dropped.
+
+SQL> drop sequence tid;
+
+Sequence dropped.
+
+SQL> drop sequence sid;
+
+Sequence dropped.
+
+SQL> drop trigger tid;
+drop trigger tid
+*
+ERROR at line 1:
+ORA-04080: trigger 'TID' does not exist 
+
+
+SQL> drop trigger sid;
+drop trigger sid
+*
+ERROR at line 1:
+ORA-04080: trigger 'SID' does not exist 
+
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE TABLE STUDENT (
+  2  	sid NUMBER PRIMARY KEY,
+  3  	sname VARCHAR2(50),
+  4  	address VARCHAR2(100)
+  5* )
+SQL> r
+  1  CREATE TABLE STUDENT (
+  2  	sid NUMBER PRIMARY KEY,
+  3  	sname VARCHAR2(50),
+  4  	address VARCHAR2(100)
+  5* )
+
+Table created.
+
+SQL> deit
+SP2-0042: unknown command "deit" - rest of line ignored.
+SQL> edit
+Wrote file afiedt.buf
+
+  1    1  CREATE TABLE TEACHER (
+  2    2      tid NUMBER PRIMARY KEY,
+  3    3      tname VARCHAR2(50),
+  4    4      Degree VARCHAR2(50),
+  5    5*     Salary NUMBER(10) 
+  6* )
+SQL> r
+  1    1  CREATE TABLE TEACHER (
+  2    2      tid NUMBER PRIMARY KEY,
+  3    3      tname VARCHAR2(50),
+  4    4      Degree VARCHAR2(50),
+  5    5*     Salary NUMBER(10) 
+  6* )
+  1  CREATE TABLE TEACHER (
+  *
+ERROR at line 1:
+ORA-00900: invalid SQL statement 
+
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE TABLE TEACHER (
+  2  	tid NUMBER PRIMARY KEY,
+  3  	tname VARCHAR2(50),
+  4  	Degree VARCHAR2(50),
+  5  	Salary NUMBER(10) 
+  6* )
+SQL> r
+  1  CREATE TABLE TEACHER (
+  2  	tid NUMBER PRIMARY KEY,
+  3  	tname VARCHAR2(50),
+  4  	Degree VARCHAR2(50),
+  5  	Salary NUMBER(10) 
+  6* )
+
+Table created.
+
+SQL>   1  CREATE TABLE COURSE (
+SQL>   2      cid NUMBER PRIMARY KEY,
+SQL>   3      title VARCHAR2(50),
+SQL>   4*     credits NUMBER (10) )
+SP2-0734: unknown command beginning "4*     cre..." - rest of line ignored.
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE TABLE COURSE (
+  2  	cid NUMBER PRIMARY KEY,
+  3  	title VARCHAR2(50),
+  4  	credits NUMBER (10) 
+  5* )
+SQL> r
+  1  CREATE TABLE COURSE (
+  2  	cid NUMBER PRIMARY KEY,
+  3  	title VARCHAR2(50),
+  4  	credits NUMBER (10) 
+  5* )
+
+Table created.
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE TABLE TRANSCRIPT (
+  2  	sid NUMBER, cid NUMBER, tid NUMBER,
+  3  	semester VARCHAR2(20),
+  4  	year NUMBER (4),
+  5  	grade VARCHAR2(2),
+  6  	FOREIGN KEY (sid) REFERENCES STUDENT(sid),
+  7  	FOREIGN KEY (tid) REFERENCES TEACHER(tid),
+  8* 	FOREIGN KEY (cid) REFERENCES COURSE(cid) )
+SQL> r
+  1  CREATE TABLE TRANSCRIPT (
+  2  	sid NUMBER, cid NUMBER, tid NUMBER,
+  3  	semester VARCHAR2(20),
+  4  	year NUMBER (4),
+  5  	grade VARCHAR2(2),
+  6  	FOREIGN KEY (sid) REFERENCES STUDENT(sid),
+  7  	FOREIGN KEY (tid) REFERENCES TEACHER(tid),
+  8* 	FOREIGN KEY (cid) REFERENCES COURSE(cid) )
+
+Table created.
+
+SQL> select * fron tab;
+select * fron tab
+         *
+ERROR at line 1:
+ORA-00923: FROM keyword not found where expected 
+
+
+SQL> select * from tab;
+
+TNAME                          TABTYPE  CLUSTERID                               
+------------------------------ ------- ----------                               
+COURSE                         TABLE                                            
+STUDENT                        TABLE                                            
+TEACHER                        TABLE                                            
+TRANSCRIPT                     TABLE                                            
+
+SQL> select * from student;
+
+no rows selected
+
+SQL> INSERT INTO STUDENT (sid, sname, address) VALUES (101, 'Ali', 'Hebron');
+
+1 row created.
+
+SQL>  INSERT INTO STUDENT (sid, sname, address) VALUES (105, 'Hussin', 'Hebron');
+
+1 row created.
+
+SQL> INSERT INTO STUDENT (sid, sname, address) VALUES (103, 'Mohammad', 'Dora');
+
+1 row created.
+
+SQL> INSERT INTO STUDENT (sid, sname, address) VALUES (102, 'Sami', 'Halhul');
+
+1 row created.
+
+SQL> INSERT INTO STUDENT (sid, sname, address) VALUES (104, 'Maryam', 'Ramallah');
+
+1 row created.
+
+SQL> INSERT INTO TEACHER (tid, tname, Degree, Salary) VALUES (201, 'Ahmad', 'PhD', 1500);
+
+1 row created.
+
+SQL> INSERT INTO TEACHER (tid, tname, Degree, Salary) VALUES (202, 'Sufian', 'Professor', 2000);
+
+1 row created.
+
+SQL> INSERT INTO TEACHER (tid, tname, Degree, Salary) VALUES (203, 'Alaa', 'Master', 1000);
+
+1 row created.
+
+SQL> INSERT INTO TEACHER (tid, tname, Degree, Salary) VALUES (204, 'Khaleel', 'PhD', 1500);
+
+1 row created.
+
+SQL> INSERT INTO TEACHER (tid, tname, Degree, Salary) VALUES (205, 'Salman', 'PhD', 1500);
+
+1 row created.
+
+SQL> INSERT INTO COURSE (cid, title, credits) VALUES (4333, 'Database', 3);
+
+1 row created.
+
+SQL> INSERT INTO COURSE (cid, title, credits) VALUES (1201, 'SWE', 2);
+
+1 row created.
+
+SQL> INSERT INTO COURSE (cid, title, credits) VALUES (6333, 'DB1', 3);
+
+1 row created.
+
+SQL> INSERT INTO COURSE (cid, title, credits) VALUES (6315, 'DB2', 3);
+
+1 row created.
+
+SQL> INSERT INTO COURSE (cid, title, credits) VALUES (3326, 'Java', 3);
+
+1 row created.
+
+SQL> INSERT INTO COURSE (cid, title, credits) VALUES (1370, 'C++', 4);
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (101, 4333, 201, 'Sem1', 2009, 'A');
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (101, 6333, 201, 'Sem2', 2009, 'A');
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (101, 6315, 201, 'Sem2', 2009, 'A');
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (103, 4333, 203, 'Summer', 2010, 'B');
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (102, 4333, 201, 'Sem2', 2009, 'A');
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (103, 3326, 204, 'Sem1', 2008, 'A');
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (104, 1201, 205, 'Sem2', 2009, 'B');
+
+1 row created.
+
+SQL> INSERT INTO TRANSCRIPT (sid, cid, tid, semester, year, grade) VALUES (104, 1370, 203, 'Summer', 2010, 'A');
+
+1 row created.
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE SEQUENCE sid
+  2*  	start with 101 increment by 1
+SQL> r
+  1  CREATE SEQUENCE sid
+  2*  	start with 101 increment by 1
+
+Sequence created.
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE SEQUENCE tid
+  2*  	start with 101 increment by 1
+SQL> r
+  1  CREATE SEQUENCE tid
+  2*  	start with 101 increment by 1
+
+Sequence created.
+
+SQL> drop sequence tid;
+
+Sequence dropped.
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1* drop sequence tid
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE SEQUENCE tid
+  2* 	start with 201 increment by 1
+SQL> r
+  1  CREATE SEQUENCE tid
+  2* 	start with 201 increment by 1
+
+Sequence created.
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE OR REPLACE TRIGGER sid
+  2  	BEFORE INSERT ON STUDENT
+  3  	FOR EACH ROW
+  4  	BEGIN
+  5  	IF:NEW.sid is null then
+  6  	select sid.nextval
+  7  	into:new sid
+  8  	from dual;
+  9  	end if;
+ 10* 	end;
+SQL> r
+  1  CREATE OR REPLACE TRIGGER sid
+  2  	BEFORE INSERT ON STUDENT
+  3  	FOR EACH ROW
+  4  	BEGIN
+  5  	IF:NEW.sid is null then
+  6  	select sid.nextval
+  7  	into:new sid
+  8  	from dual;
+  9  	end if;
+ 10* 	end;
+
+Warning: Trigger created with compilation errors.
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE OR REPLACE TRIGGER sid
+  2  	BEFORE INSERT ON STUDENT
+  3  	FOR EACH ROW
+  4  	BEGIN
+  5  	IF:NEW.sid is null then
+  6  	select sid.nextval
+  7  	into:new.sid
+  8  	from dual;
+  9  	end if;
+ 10* 	end;
+SQL> r
+  1  CREATE OR REPLACE TRIGGER sid
+  2  	BEFORE INSERT ON STUDENT
+  3  	FOR EACH ROW
+  4  	BEGIN
+  5  	IF:NEW.sid is null then
+  6  	select sid.nextval
+  7  	into:new.sid
+  8  	from dual;
+  9  	end if;
+ 10* 	end;
+
+Trigger created.
+
+SQL> edit
+Wrote file afiedt.buf
+
+  1  CREATE OR REPLACE TRIGGER tid
+  2  	BEFORE INSERT ON TEACHER
+  3  	FOR EACH ROW
+  4  	BEGIN
+  5  	IF:NEW.tid is null then
+  6  	select tid.nextval
+  7  	into:new.tid
+  8  	from dual;
+  9  	end if;
+ 10* 	end;
+SQL> r
+  1  CREATE OR REPLACE TRIGGER tid
+  2  	BEFORE INSERT ON TEACHER
+  3  	FOR EACH ROW
+  4  	BEGIN
+  5  	IF:NEW.tid is null then
+  6  	select tid.nextval
+  7  	into:new.tid
+  8  	from dual;
+  9  	end if;
+ 10* 	end;
+
+Trigger created.
+
+SQL> spool off

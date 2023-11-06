@@ -13,7 +13,7 @@ services:
   #     - "80:5000"
 
   app:
-    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
+    image: ghcr.io/somecoder23/realtimechat:latest
     mem_limit: 5g
     restart: always 
     environment:
@@ -22,7 +22,7 @@ services:
       - DB_HOST= $DB_HOST 
       - DB_PORT= $DB_PORT
       - DB_USER_NAME= $DB_USER_NAME 
-      - DB_NAME= $DB_NAE
+      - DB_NAME= $DB_NAME
       - AWS_ACCESS_KEY_ID= $AWS_ACCESS_KEY_ID 
       - AWS_SECRET_ACCESS_KEY= $AWS_SECRET_ACCESS_KEY 
       - AWS_REGION= $AWS_REGION 

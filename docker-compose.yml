@@ -18,7 +18,6 @@ services:
     environment:
       - PORT= 5000
       - DB_PASSWORD= $DB_PASSWORD
-      - GIT_VERSISON= ${{ needs.build.outputs.image_version }}
       - DB_HOST= $DB_HOST 
       - DB_PORT= $DB_PORT
       - DB_USER_NAME= $DB_USER_NAME 

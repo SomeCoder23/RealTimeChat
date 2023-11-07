@@ -180,7 +180,6 @@ const changePassword = async ( req: express.Request, res: express.Response, next
       else res.status(400).json({success: false, error: 'Password incorrect'});
 }
 
-
 const logout = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   
   const username = res.locals.user.username;
@@ -211,18 +210,33 @@ const logout = async ( req: express.Request, res: express.Response, next: expres
 else res.status(500).json({ success: false, error: 'Logout failed' });
 }
 
-const getContacts = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+//NEEDS PAGINATION - DONE
+const getContacts = async ( req: any, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
-  const contacts = await Contacts.find({where: 
-    {user: user}
-  })
+  const page = parseInt(req.query.page || '1');
+  const pageSize = parseInt(req.query.pageSize || '10');
+  const [contacts, total] = await Contacts.findAndCount({
+    where: {
+      user: user, 
+    },
+    skip: pageSize * (page - 1),
+    take: pageSize
+  });
 
   if(contacts){
-    if(contacts.length < 1)
-      res.status(200).json({success: true, data: "No contacts yet. So lonely..."});
+    if(contacts.length < 1){
+      res.status(200).json({success: true, data: "No contacts here. So lonely..."});
+      return;
+    }
     
-      const people = await formatContacts(contacts, user);
-    res.status(200).json({success: true, data: people});
+    const people = await formatContacts(contacts, user);
+    const data = {
+      page: page,
+      pageSize: pageSize,
+      total,
+      people
+    }
+    res.status(200).json({success: true, data: data});
   }
   else res.status(500).json({success: false, error: "Problem occurred"});
 
@@ -243,9 +257,10 @@ const getUsers = async ( req: any, res: express.Response, next: express.NextFunc
         bio: user.profile.bio
       }
     });
+    
     const data = {
-      page: 1,
-      pageSize: users.length,
+      page: page,
+      pageSize: pageSize,
       total,
       formatedUsers
     }
@@ -256,28 +271,46 @@ const getUsers = async ( req: any, res: express.Response, next: express.NextFunc
   }
 }
 
-const searchUsers =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+//NEEDS PAGINATION - DONE
+const searchUsers =  async ( req: any, res: express.Response, next: express.NextFunction) => {
   const query = req.params.query;
-  let users;
-  if(query.length < 1) users = await User.find(); 
+  const page = parseInt(req.query.page || '1');
+  const pageSize = parseInt(req.query.pageSize || '10');
+  let users, total;
+  if(query.length < 1) {
+    [users, total] = await User.findAndCount({
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
+  }
 
-  else users = await User.find({
-    where: {username: ILike(`${query}%`)}
-  });
+  else {
+    [users, total] = await User.findAndCount({
+      where: {username: ILike(`${query}%`)},
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
+  }
   
-
   if(users){
     let results;
-    if(users.length >= 1)
-     results = users.map(user => {
+    if(users.length >= 1) {
+     const formatedUsers = users.map(user => {
       return {
-        username: user.username,
-        name: user.profile.fullName,
-        bio: user.profile.bio
+          username: user.username,
+          name: user.profile.fullName,
+          bio: user.profile.bio
+        }
+      });
+      results = {
+        page: page,
+        pageSize: pageSize,
+        total,
+        formatedUsers
       }
-    });
+  }
     else results = "No users found";
-    res.status(200).json({success: true, total: users.length, data: results})
+    res.status(200).json({success: true, data: results})
   }
   else {
     res.status(500).json({success: false, error: "Problemo occurred."})

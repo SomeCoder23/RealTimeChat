@@ -19,7 +19,7 @@ var router = express.Router();
 router.post('/login', validateLogin, login);
 router.post('/logout', authenticate, logout);
 router.post('/register', validateUser ,createUser);
-router.post('/addContact/:username', authenticate, addContact);
+router.post('/contact/:username', authenticate, addContact);
 
 //GET ROUTES
 router.get('/', authenticate, getUsers);
@@ -79,7 +79,7 @@ router.get('/profile/:username', authenticate, async (req, res) =>{
 
 //PUT ROUTES
 router.put('/profile', authenticate, updateUserProfile); 
-router.put('/change_password', authenticate, changePassword);   
-router.put('/change_relationship', authenticate, changeFriendStatus); 
+router.put('/password', authenticate, changePassword);   
+router.put('/relationship', authenticate, changeFriendStatus); 
 
 export default router;

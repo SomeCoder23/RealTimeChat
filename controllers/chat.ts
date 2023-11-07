@@ -1,7 +1,7 @@
 import { Message } from "../db/entities/Message.js";
 import { User } from "../db/entities/User.js";
 import { Chat } from "../db/entities/Chat.js";
-import { ILike, In, Like, MoreThan } from "typeorm";
+import { Between, ILike, In, Like, MoreThan } from "typeorm";
 import db from '../db/dataSource.js';
 import { Contacts } from "../db/entities/Contacts.js";
 import express, { response } from 'express';
@@ -109,24 +109,40 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
   }
 }
 
-const getChatMessages = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+const getChatMessages = async ( req: any, res: express.Response, next: express.NextFunction) => {
   //gets the messages of the last 24 hours
   const id : number = Number(req.params.chatId);
   const user = res.locals.user;
-  const date = new Date();
-
+  const page = parseInt(req.query.page || '1');
+  const pageSize = parseInt(req.query.pageSize || '10');
+  const dayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000); 
   const chat = await validate(id, user);
 
   if(chat){
-    const messages = chat.messages.filter(message => message.timeSent > new Date(date.getTime() - 24 * 60 * 60 * 1000))
+    const [messages, total] = await Message.findAndCount({
+      relations: ["userChats", "userChats.user", "userChats.chat"],
+      where: {
+        userChats: {
+                user: { id: chat.user.id },
+                chat: { id: chat.chat.id },
+              },
+        timeSent: Between(dayAgo, new Date())
+      },
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
     const formatedMessages = await formatMessages(messages);
-    res.status(200).json({success: true, data: formatedMessages});
+    const info = {
+      page: page,
+      pageSize: pageSize,
+      total
+    }
+    res.status(200).json({success: true, info: info, data: formatedMessages});
   }
   else {
     res.status(404).json({success: false, error: 'Chat not found'});
 }  
 }
-
 
 const getGroupInfo = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id = Number(req.params.chatId);
@@ -207,7 +223,6 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
 
 }
 
-
 const clearChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id = Number(req.params.chatId);
   const user = res.locals.user;
@@ -226,42 +241,77 @@ const clearChat = async ( req: express.Request, res: express.Response, next: exp
 
 }
 
-
 const leaveRoom = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   req.body.username = res.locals.user.username;
   req.body.chatID = req.params.chatId;
   removeParticipant(req, res, next);
 }
 
-const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+const getChats = async ( req: any, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
+  const page = parseInt(req.query.page || '1');
+  const pageSize = parseInt(req.query.pageSize || '10');
   try{
-        const userChats = await UserChat.find({where: {user: user}, order: {
-          lastEntry: "DESC" 
-        }});
-        if(userChats){
-        let formatedChats = [];
-        for(let i = 0; i < userChats.length; i++){
-          const chatty = await formatChatInfo(userChats[i], user);
-          formatedChats.push(chatty);
-        }
-        res.status(200).json({success: true, totalChats: formatedChats.length, data: formatedChats});
-      }
+    const [userChats, total] = await UserChat.findAndCount({
+      where: {
+        user: user
+      },
+      order: { 
+        lastEntry: "DESC" 
+      },
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
     
-      } catch(error){
-        console.log(error);
-        res.status(500).json({success: false, error: "Problem occurred"});
-
+      if(userChats){
+      let formatedChats = [];
+      for(let i = 0; i < userChats.length; i++){
+        const chatty = await formatChatInfo(userChats[i], user);
+        formatedChats.push(chatty);
       }
+      const info = {
+        page: page,
+        pageSize: pageSize,
+        total
+      }
+      res.status(200).json({success: true, info: info, data: formatedChats});
+    }
+    
+  } catch(error){
+    console.log(error);
+    res.status(500).json({success: false, error: "Problem occurred"});
+
+  }
 }
 
-const getHistory = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+const getHistory = async ( req: any, res: express.Response, next: express.NextFunction) => {
   const id : number = Number(req.params.chatId);
   const user = res.locals.user;
+  const page = parseInt(req.query.page || '1');
+  const pageSize = parseInt(req.query.pageSize || '10');
   const chat = await validate(id, user);
   if(chat){  
-    const formatedMessages = await formatMessages(chat.messages);
-    res.status(200).json({success: true, data: formatedMessages});
+    const [messages, total] = await Message.findAndCount({
+      relations: ["userChats", "userChats.user", "userChats.chat"],
+      where: {
+        userChats: {
+                user: { id: chat.user.id },
+                chat: { id: chat.chat.id },
+              },
+      },
+      order: {
+        timeSent: "DESC"
+      },
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
+    const formatedMessages = await formatMessages(messages);
+    const info = {
+      page: page,
+      pageSize: pageSize,
+      total
+    }
+    res.status(200).json({success: true, info: info, data: formatedMessages});
   }
   else res.status(401).json({success: false, error: 'Chat not found'});
 }
@@ -451,41 +501,101 @@ const changeChatStatus = async ( req: express.Request, res: express.Response, ne
 
 }
 
-const searchChats =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+const searchChats =  async ( req: any, res: express.Response, next: express.NextFunction) => {
   const query = req.body.query;
   const user = res.locals.user;
-  let chats;
-  if(query.length < 1) chats = await UserChat.find({where: {user: user}, order: {
-    lastEntry: "DESC" 
-  }});
-  else chats = await UserChat.find({
-    where: {name: ILike(`${query}%`), user: user}, order: {
-      lastEntry: "DESC" 
-    }
-  });
-
-  console.log(chats);
-
+  const page = parseInt(req.query.page || '1');
+  const pageSize = parseInt(req.query.pageSize || '10');
+  let chats, total;
+  if(query.length < 1) {
+    [chats, total] = await UserChat.findAndCount({
+      where: {
+        user: user
+      },
+      order: { 
+        lastEntry: "DESC" 
+      },
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
+  } 
+  else {
+    [chats, total] = await UserChat.findAndCount({
+      where: {
+        user: user,
+        name: ILike(`${query}%`)
+      },
+      order: { 
+        lastEntry: "DESC" 
+      },
+      skip: pageSize * (page - 1),
+      take: pageSize
+    });
+  }
+  
   if(chats){
-    res.status(200).json({success: true, data: chats})
+    const info = {
+      page: page,
+      pageSize: pageSize,
+      total
+    }
+    res.status(200).json({success: true, info: info, data: chats})
   }
   else {
     res.status(500).json({success: false, error: "Problemo occurred."})
   }
 }
 
-const searchMessages =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+const searchMessages =  async ( req: any, res: express.Response, next: express.NextFunction) => {
   const query = req.body.query;
   const chatId = Number(req.body.chatID);
   const user = res.locals.user;
+  const page = parseInt(req.query.page || '1');
+  const pageSize = parseInt(req.query.pageSize || '10');
   const chat = await validate(chatId, user);
   if(chat){
-    let messages;
-    if(query.length < 1) messages = chat.messages;
-    else messages = chat.messages.filter(msg => msg.content.includes(query));
+    let messages, total;
+    if(query.length < 1) {
+      [messages, total] = await Message.findAndCount({
+        relations: ["userChats", "userChats.user", "userChats.chat"],
+        where: {
+          userChats: {
+                  user: { id: chat.user.id },
+                  chat: { id: chat.chat.id },
+                },
+        },
+        order: {
+          timeSent: "DESC"
+        },
+        skip: pageSize * (page - 1),
+        take: pageSize
+      });
+    }
+    else {
+      [messages, total] = await Message.findAndCount({
+        relations: ["userChats", "userChats.user", "userChats.chat"],
+        where: {
+          userChats: {
+            user: { id: chat.user.id },
+            chat: { id: chat.chat.id },
+          },
+          content: ILike(`%${query}%`)
+        },
+        order: {
+          timeSent: "DESC"
+        },
+        skip: pageSize * (page - 1),
+        take: pageSize
+      });
+    } 
   const formatedMessages = await formatMessages(messages);
   if(messages){
-    res.status(200).json({success: true, data: formatedMessages})
+    const info = {
+      page: page,
+      pageSize: pageSize,
+      total
+    }
+    res.status(200).json({success: true, info: info, data: formatedMessages})
   }
   else {
     res.status(500).json({success: false, error: "Problemo occurred."})
@@ -535,7 +645,6 @@ const formatChatInfo = async (chat: any, user: User) => {
     chatStatus: chat.status
   };
 }
-
 
 const formatMessages = async (messages: Message[]) => {
   const senders : any = messages.map(message => message.sender);

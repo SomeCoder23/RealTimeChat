@@ -34,16 +34,15 @@ router.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 //POST ROUTES
-router.post("/sendMessage/:chatId", (req, res, next) =>
+router.post("/message/:chatId", (req, res, next) =>
   sendMessage(req, res, next, "text")
 );
-router.post(
-  "/sendAttachment/:chatId",
+router.post("/attachment/:chatId",
   upload.single("file"),
   (req, res, next) => sendMessage(req, res, next, "attachment")
 );
-router.post("/create_group", createChat);
-router.post("/start_chat/:username", createChat);
+router.post("/group", createChat);
+router.post("/newChat/:username", createChat);
 router.post("/add_participant", addParticipant);
 router.post("/remove_participant", removeParticipant);
 router.post("/clear_chat/:chatId", clearChat);
@@ -52,11 +51,10 @@ router.post("/searchChats", searchChats);
 router.post("/leave_chat/:chatId", leaveRoom);
 
 //GET ROUTES
-
 router.get("/", getChats);
 router.get("/chatInfo/:chatId", getGroupInfo);
 router.get("/conversations", getChats);
-router.get("/getMessages/:chatId", getChatMessages);
+router.get("/messages/:chatId", getChatMessages);
 router.get("/history/:chatId", getHistory);
 
 //PUT ROUTES

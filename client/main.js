@@ -22,7 +22,6 @@ const logout = document.getElementById("logout");
 const URL = 'http://www.localhost:5000';
 const socket = io(URL);
 
-//let users = [];
 let allMessages = []
 let orderedChats = [];
 let currentChat = 0;
@@ -31,9 +30,7 @@ let chatStatus = "normal";
 let user;
 let searching = false;
 
-
 socket.on("message", (message) => {
-    //messages.push(message);
     if(chatStatus == "blocked") return;
     allMessages.push(message);
     if(searching) return;
@@ -65,9 +62,8 @@ const getProfile = () => {
         console.log("RESPONSE:");
         console.log(response);
         if (!response.ok) {
-            //return alert("A Problem Occured");
+            if(username)
             username.innerText = "Loading...";
-            return;
         } 
 
         return response.json();
@@ -77,14 +73,14 @@ const getProfile = () => {
         if (data.success){
             user = data.username;
             username.innerText = user;
-            return;
+            return true;
         }
-        else return username.innerText = "Loading";
+        else return false;
     })
     .catch(error => {
-        //console.error("somethign went wrongoo");
-        username.innerText = "Loading";
-        //return alert("Something went wrong :(");
+        if(username)
+         username.innerText = "Loading";
+        else return false;
     });
 }}
 
@@ -117,7 +113,6 @@ const updateChats = (chats) => {
             topHeading.style.display = "flex";
             bottom.style.display = "block";
           }
-          // Remove the "active" class from previously clicked chat
           const activeChat = document.querySelector('.clearfix.active');
           if (activeChat) {
             activeChat.classList.remove('active');
@@ -150,7 +145,6 @@ const updateChatMessages = (messages) => {
 }
 
 function addAttachment(file) {
-    //allMessages.push(message)  
     let type;
     let align = "";
     let content;
@@ -216,7 +210,6 @@ const getChats = () => {
     })
     .catch(error => {
         console.error('Error:', error);
-        //return alert("Something went wrong :(");
     });
 
 }
@@ -268,7 +261,6 @@ function updateUsers() {
 }
 
 function addMessage(message) {
-    //allMessages.push(message)
     let type;
     let align = "";
     if(message.sender == user) type = "message my-message";
@@ -292,7 +284,6 @@ function addMessage(message) {
     messageList.append(newMsg);   
      
 }
-
 
 function messageSubmitHandler(e) {
     e.preventDefault();
@@ -332,7 +323,6 @@ function messageSubmitHandler(e) {
     });
 
 }
-
 
 function loginHandler(e) {
     e.preventDefault();
@@ -415,7 +405,6 @@ const searchChats = () => {
     })
     .catch(error => {
         console.error('Error:', error);
-        //return alert("Something went wrong :(");
     });
 }
 
@@ -447,8 +436,6 @@ const searchMsgs = () => {
         console.log(data);
         if (data.success){
             const messages = data.data;
-            // console.log("MESSAGES: ");
-            // console.log(messages);
             updateChatMessages(messages);
             return;
         }
@@ -456,7 +443,6 @@ const searchMsgs = () => {
     })
     .catch(error => {
         console.error('Error:', error);
-        //return alert("Something went wrong :(");
     });
 }
 
@@ -582,15 +568,8 @@ if(sendMsg){
         topHeading.style.display = "flex";
         bottom.style.display = "block";
     }
-    // window.addEventListener('blur', () => {
-    //     setTimeout(userOffline, 60000);
-    //   });
     window.addEventListener('focus', userOnline);
-    //window.addEventListener('blur', userOffline);
     getChats();
-    getProfile();
-    //window.addEventListener('load', getChats());
-    //window.addEventListener('load', getProfile());
     const hiddenBtn = document.getElementById("submitAttachment");
     document.getElementById("clearBtn").addEventListener("click", clearMsgs);
     document.getElementById("imgBtn").addEventListener("click", () => {
@@ -645,4 +624,8 @@ if(sendMsg){
 }
 
 if(login)
-login.addEventListener('submit', loginHandler);
+  login.addEventListener('submit', loginHandler);
+
+if(!getProfile() && login){
+    window.location.href = "/client/main.html"; 
+}

@@ -1,7 +1,5 @@
-import { BaseEntity, Column, Entity, CreateDateColumn, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToMany, JoinTable, BeforeRemove } from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn} from "typeorm";
 import { Profile } from "./Profile.js";
-import { Chat } from "./Chat.js";
-import { Contacts } from "./Contacts.js";
 
 @Entity()
 export class User extends BaseEntity{
@@ -18,20 +16,12 @@ export class User extends BaseEntity{
     email: string;
 
     @Column({
-      type: 'date'/*,
-      default: () => 'CURRENT_DATE',*/
+      type: 'date'
     })
     createdAt: Date;
 
     @OneToOne(() => Profile, {eager: true })
     @JoinColumn()
     profile: Profile;
-
-
-    // @ManyToMany(() => Chat, chat => chat.participants)
-    // chats: Chat[];
-
-    // @OneToMany(() => Contacts, contact => contact.user, {cascade: true})
-    // contacts: Contacts[];
 
 }

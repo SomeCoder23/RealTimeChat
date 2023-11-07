@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, JoinTable, BeforeRemove, BeforeInsert } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, BeforeInsert } from "typeorm";
 import { User } from "./User.js";
 
 @Entity()
@@ -10,12 +10,10 @@ export class Contacts extends BaseEntity {
     name: string;
 
     @ManyToOne(() => User, {eager: true})
-//    @JoinTable()
     user: User;
 
     @ManyToOne(() => User, {eager: true, onDelete: 'SET NULL'})
     contact: User;
-
 
     @Column({
         type: 'enum',
@@ -25,8 +23,7 @@ export class Contacts extends BaseEntity {
     relationshipStatus: 'blocked' | 'normal';
 
     @CreateDateColumn({
-        type: 'timestamp'/*,
-        default: () => "CURRENT_TIMESTAMP()"*/
+        type: 'timestamp'
     })
     createdAt: Date;
 
@@ -36,6 +33,4 @@ export class Contacts extends BaseEntity {
         this.name = this.contact.username;
       }
     }
-
-
 }

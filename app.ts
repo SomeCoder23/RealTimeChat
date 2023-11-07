@@ -7,15 +7,12 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
-import dataSource from "./db/dataSource.js";
 import { authenticate } from "./middleware/auth/authenticate.js";
-import session from "express-session";
-import path from "path";
 import { changeStatus} from "./controllers/user.js";
-import { getEmails } from "./controllers/chat.js";
 import { error404Handler } from "./middleware/errorHandling.js";
 // import router from "./ses.js";
 import AWS from 'aws-sdk';
+import { getEmails } from "./controllers/chat.js";
 
 AWS.config.update({
   accessKeyId: process.env.AWS_SES_ACCESS_KEY,
@@ -23,7 +20,6 @@ AWS.config.update({
   region: process.env.AWS_SES_REGION
 });
 const ses = new AWS.SES({ region: 'eu-north-1' });
-
 
 var app = express();
 app.use(express.static("client"));
@@ -58,13 +54,9 @@ app.get("/health", (req, res) => {
 io.on("connection", (socket: Socket) => {
   console.log("connected to", socket.id);
 
-  //done
   socket.on("adduser", (username: string) => {
     socket.data.user = username;
-    //users.push(username);
-    //changeStatus("online", username);
     console.log("USER: " + socket.data.user);
-   // io.sockets.emit("users", users);
   });
 
   socket.on("online", async (username: string) => {
@@ -75,8 +67,8 @@ io.on("connection", (socket: Socket) => {
   socket.on("offline", async (username: string) => {
     await changeStatus("offline", username);
   })
-  //done
-  socket.on("message", (message: any) => {
+
+  socket.on("message", async (message: any) => {
     if (socket.data.room) {
       const messageData = {
         user: message.sender,
@@ -86,11 +78,14 @@ io.on("connection", (socket: Socket) => {
       };
       
       io.to(socket.data.room).emit("message", messageData);
-  
+      
+      const emails = await getEmails(socket.data.room, message.sender);
+
+      for(let i = 0; i < emails.length; i++){
       const emailParams: AWS.SES.SendEmailRequest = {
         Source: 'realtimechatapp7@gmail.com', 
         Destination: {
-          ToAddresses: ['raghadtest123@gmail.com'], 
+          ToAddresses: [emails[i]], 
         },
         Message: {
           Subject: {
@@ -111,12 +106,13 @@ io.on("connection", (socket: Socket) => {
           console.log("Email sent:", data);
         }
       });
+    }
+    
     } else {
       console.log("NOT IN ROOM");
       socket.emit("message", "Not in room.");
     }
   });
-
 
   socket.on("attachment", (file: any) => {
     if (socket.data.room) {
@@ -130,12 +126,10 @@ io.on("connection", (socket: Socket) => {
     } else { console.log("NOT IN ROOM"); socket.emit("message", "Not in room.");}
   });
 
-  // done
   socket.on("joinRoom", (room) => {
     socket.join(room);
     socket.data.room = room;
     console.log(`Socket joined room: ${room}`);
-    //io.sockets.emit("joinedRoom", room);
   });
 
   socket.on("leaveRoom", () => {
@@ -148,28 +142,16 @@ io.on("connection", (socket: Socket) => {
   socket.on("disconnect", () => {
     console.log("deleting ", socket.data.user);
     if(socket.data.user) changeStatus("offline", socket.data.user);
-    // if (socket.data.user) {
-    //   const index = users.indexOf(socket.data.user);
-    //   if (index !== -1) {
-    //     users.splice(index, 1);
-    //   }
-    // }
-
     io.sockets.emit("users", users);
     console.log("remaining users: ", users);
   });
 });
+
 app.use(error404Handler);
 
 server.listen(PORT, () => {
   console.log("SERVER IS RUNNING");
   db.initialize();
 });
-
-// app.listen(PORT, () => {
-//     console.log(`App is listening on port ${PORT}`);
-//     db.initialize();
-
-// });
 
 export default app ;

@@ -16,7 +16,6 @@ import { changeFriendStatus, addContact } from '../controllers/chat.js';
 var router = express.Router();
 
 //POST ROUTES
-
 router.post('/login', validateLogin, login);
 router.post('/logout', authenticate, logout);
 router.post('/register', validateUser ,createUser);
@@ -27,8 +26,6 @@ router.get('/', authenticate, getUsers);
 router.get('/contacts', authenticate, getContacts);
 router.get("/search/:query", searchUsers);
 router.get('/status/:username', authenticate, async (req, res) =>{
-
-  //gets the presence status of the specified user 
   try{
     const username = req.params.username;
     const user = await User.findOneBy({username});
@@ -41,7 +38,7 @@ router.get('/status/:username', authenticate, async (req, res) =>{
 
 }catch(error){
     console.error(error);
-    res.status(500).json({ success: false, error: 'Somwthing went wrong' });
+    res.status(500).json({ success: false, error: 'Something went wrong' });
 }
 
 });
@@ -80,12 +77,9 @@ router.get('/profile/:username', authenticate, async (req, res) =>{
     }
 }); 
 
-
-
 //PUT ROUTES
 router.put('/profile', authenticate, updateUserProfile); 
 router.put('/change_password', authenticate, changePassword);   
 router.put('/change_relationship', authenticate, changeFriendStatus); 
-
 
 export default router;

@@ -1,16 +1,12 @@
-import { ChatTypes } from "../@types/types.js";
-import ioClient from 'socket.io-client';
 import { Message } from "../db/entities/Message.js";
 import { User } from "../db/entities/User.js";
 import { Chat } from "../db/entities/Chat.js";
 import { ILike, In, Like, MoreThan } from "typeorm";
 import db from '../db/dataSource.js';
 import { Contacts } from "../db/entities/Contacts.js";
-//const socket = ioClient('http://localhost:5000');
 import express, { response } from 'express';
 import { UserChat } from "../db/entities/UserChat.js";
 
-//NOTE: when creating a one-to-one chat should i add the users to each others contacts if not added already????
 const createChat = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const currentUser = res.locals.user;
   let chatName, desc;
@@ -20,7 +16,6 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
   const currentTime = new Date();
 
   try {
-    //if its a group chat
     if (!req.body.username || !req.params.username) {
       desc = req.body.description;
       chatName = req.body.name;
@@ -37,14 +32,13 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
           return;
         }
         participants = users;
-        //participants.push(currentUser);
         const adminUser = await UserChat.create({
           name: chatName,
           user: currentUser,
           role: "admin"
         });
         userChats.push(adminUser);
-
+        
         for(let i = 0; i < participants.length; i++){
           const userChat = await UserChat.create({
             name: chatName,
@@ -59,14 +53,12 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
         return;
       }
     } else {
-      //if its ont-to-one chat
+      //NOTE: when creating a one-to-one chat should i add the users to each others contacts if not added already??
       const username = req.params.username;
       const user:any = await User.findOneBy({ username });
       if (user) {
-        //check if there already exits a chat.
         const chats1 = await UserChat.find({where: {user: currentUser}})
         const filteredChats = chats1.filter(chat => {if (chat.chat.type === "1To1" && chat.name === user.username) return chat;});
-         //let chats2 = await UserChat.find({where: {user: user, chat: In(filteredChats)}})
          if(filteredChats.length > 0){
           res.status(409).json({success: false, error: "Chat already exists"});
           return;
@@ -74,7 +66,6 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
 
         participants = [user];
         desc = "A one-to-one chat";
-        //chatName = user.username;
         const user1 = await UserChat.create({
           user: user,
           name: currentUser.username
@@ -84,15 +75,6 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
           name: user.username
         });
         userChats.push(user1, user2);
-        //adds to contact....maybe should have its own endpoint?
-      //   try {
-      //     // addContact(currentUser , user.username);
-      //     // addContact(user, currentUser.username);
-      // } catch (error) {
-      //   console.error(error);
-      //   res.status(500).json({success: false, error: 'Problem Occurred'});
-      // }
-
 
       } else {
         res.status(401).json({success: false, error: "Participant not found."});
@@ -101,13 +83,10 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
     }
 
     const newChat = Chat.create({
-      //name: chatName,
       description: desc,
       createdAt: currentTime,
       type: type == "group" ? "group" : "1To1"
     });
-
-    
 
     try {
       db.dataSource.manager.transaction(async (transaction) => {
@@ -130,8 +109,8 @@ const createChat = async ( req: express.Request, res: express.Response, next: ex
   }
 }
 
-//gets the messages of the last 24 hours
 const getChatMessages = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+  //gets the messages of the last 24 hours
   const id : number = Number(req.params.chatId);
   const user = res.locals.user;
   const date = new Date();
@@ -140,16 +119,12 @@ const getChatMessages = async ( req: express.Request, res: express.Response, nex
 
   if(chat){
     const messages = chat.messages.filter(message => message.timeSent > new Date(date.getTime() - 24 * 60 * 60 * 1000))
-    //format messages so to only send: sender's username, message content, and time sent
     const formatedMessages = await formatMessages(messages);
     res.status(200).json({success: true, data: formatedMessages});
-    //res.sendFile(__dirname + '/client/main.html');
   }
   else {
     res.status(404).json({success: false, error: 'Chat not found'});
-    //res.render('chats', { err: "not found" });
-}
-  
+}  
 }
 
 
@@ -158,13 +133,7 @@ const getGroupInfo = async ( req: express.Request, res: express.Response, next: 
   const user = res.locals.user;
 
   const group: any = await validate(id, user);
-  if(group /*&& group.chat.type === 'group'*/){
-    // const userChat = await UserChat.find({
-    //   where: {
-    //     chat: group,
-    //     user: user
-    //   }
-    // });
+  if(group){
     const chatInfo = await formatChatInfo(group, user);
     res.status(200).json({success: true, data: chatInfo});
   } else 
@@ -172,21 +141,18 @@ const getGroupInfo = async ( req: express.Request, res: express.Response, next: 
 
 }
 
-//NOTE: change the code for attachments so it uploads it to s3 not folder uploads folder
 const sendMessage = async ( req: express.Request, res: express.Response, next: express.NextFunction, type: string) => {
   console.log("SENDING....SENDING....");
   const user = res.locals.user;
   const id = Number(req.params.chatId);
   let message = req.body.content;
   let newMsg : Message;
-  //checks if chat exists 
   const chat:any = await validate(id, user);
   if(chat){
     if(chat.status == "blocked") {return res.status(400).json({success: false, error: "Chat Blocked!"});}
     try {const currentTime = new Date(); 
 
     if(type == "attachment"){
-      //saves attachment to file on server
       type = req.body.type;
       console.log("The file: ");
       console.log(req.file);
@@ -217,7 +183,6 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
         const userChats = await UserChat.find({where: {chat: chat.chat}});
         console.log(userChats.length);
         console.log(userChats);
-        //only add message to users who haven't blocked the chat
         const updatedUserChats = [];
         for(let i = 0; i < userChats.length; i++){
           if(userChats[i].status != "blocked"){
@@ -225,7 +190,6 @@ const sendMessage = async ( req: express.Request, res: express.Response, next: e
             userChats[i].messages.push(newMsg);
             userChats[i].lastEntry = newMsg.timeSent;
             updatedUserChats.push(userChats[i]);
-           // await transaction.save(userChats[i])
           }      
         }
         await transaction.save(updatedUserChats);
@@ -262,8 +226,7 @@ const clearChat = async ( req: express.Request, res: express.Response, next: exp
 
 }
 
-//NOTE: after user leaves a chat they can no longer see it listed in their conversations, should i 
-//maybe change that so they don't see any new messages only????? LATER
+
 const leaveRoom = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   req.body.username = res.locals.user.username;
   req.body.chatID = req.params.chatId;
@@ -272,7 +235,6 @@ const leaveRoom = async ( req: express.Request, res: express.Response, next: exp
 
 const getChats = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
-  console.log("INSIDDEEE GET CHATS...");
   try{
         const userChats = await UserChat.find({where: {user: user}, order: {
           lastEntry: "DESC" 
@@ -293,7 +255,6 @@ const getChats = async ( req: express.Request, res: express.Response, next: expr
       }
 }
 
-//NOTE: might needs to be changed so as to get history from S3 aws bucket maybe?
 const getHistory = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const id : number = Number(req.params.chatId);
   const user = res.locals.user;
@@ -311,7 +272,6 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
   const username = req.body.username;
 
   const chat:any = await validate(id, user);
-  //ONLY add participants to group chat
   if(chat && chat.chat.type == "group"){
     if(chat.role != "admin") return res.status(400).json({success: false, error: "This action is above you're privileges, little participant. You're not the admin of the group."});
 
@@ -320,7 +280,6 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
       res.status(400).json({success: false, error: "Invalid participant username."});
       return;
     }
-    //checks if user already a participant, if so send an error message
     const exists = await UserChat.findOne({where: {user: newUser, chat: chat.chat}})
     if(exists){
       res.status(400).json({success: false, error: "Participant already added to group"}); 
@@ -340,7 +299,6 @@ const addParticipant = async ( req: express.Request, res: express.Response, next
   } else res.status(400).json({success: false, error: "Group Chat not found"});
 }
 
-// //NOTE: maybe should add admin attribute to chat, and only allow admin to remove
 const removeParticipant = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;
   const id = Number(req.body.chatID);
@@ -373,6 +331,7 @@ const removeParticipant = async ( req: express.Request, res: express.Response, n
 }
 
 const deleteMessage = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+ //SOMETHING WRONG - WITH NEW DB MAYBE
   const user = res.locals.user;
   const id = Number(req.params.messageId);
   const message = await Message.findOneBy({id});
@@ -396,7 +355,6 @@ const addContact = async ( req: express.Request, res: express.Response, next: ex
 
   const other : any = await User.findOneBy({username});
   if(other){
-    //checks if contact already exists.
     const exists = await Contacts.find({
       where: {
         user: user,
@@ -448,7 +406,6 @@ const changeFriendStatus = async ( req: express.Request, res: express.Response, 
     if(relationship[0]){
     switch(status.toLowerCase()){
       case 'b': case 'block': case 'blocked': relationship[0].relationshipStatus = "blocked"; break;
-     // case 'm': case 'mute': case 'muted': relationship[0].relationshipStatus = "muted"; break;
       default: relationship[0].relationshipStatus = "normal";
     }
 
@@ -474,7 +431,6 @@ const changeChatStatus = async ( req: express.Request, res: express.Response, ne
 
   const userChat = await validate(chat, user);
   if(userChat){
-
     
     switch(status.toLowerCase()){
       case 'b': case 'block': case 'blocked': userChat.status = "blocked"; break;
@@ -494,7 +450,6 @@ const changeChatStatus = async ( req: express.Request, res: express.Response, ne
   }
 
 }
-
 
 const searchChats =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const query = req.body.query;
@@ -552,7 +507,6 @@ const getEmails = async (id: number, username: string) => {
   return false; 
 }
 
-//checks if chat exists and user is a participant
 const validate = async (id: number, user: any) => {
   const chat: any = await Chat.findOneBy({id});
   if(chat){
@@ -564,12 +518,11 @@ const validate = async (id: number, user: any) => {
 }
 
 const formatChatInfo = async (chat: any, user: User) => {
- // const usernames = chat.participants.map((user) => user.username);
  const users = await UserChat.find({where: {chat: chat.chat}})
  const usernames = users.map(user => user.user.username);
  const presenceStatus = users.map(userChat => {if(userChat.user.id != user.id) return userChat.user.profile.status;})
- console.log(presenceStatus);
  const isOnline = presenceStatus.filter(status => status == "online");
+ 
  return {
     id: chat.chat.id,
     name: chat.name,
@@ -597,21 +550,16 @@ const formatMessages = async (messages: Message[]) => {
 //FOR TESTING (SAME AS ABOVE BUT WITHOUT THE RESPONSE AND REQUEST OBJECTS):
 
 const getChatsTEST = async (user: any) => {
-  //const user = res.locals.user;
-  console.log("INSIDDEEE GET CHATS...");
   try{
         const userChats = await UserChat.find({where: {user: user}, order: {
           lastEntry: "DESC" 
         }});
         if(userChats){
-        console.log("USER CHATS: ");
-        console.log(userChats);
         let formatedChats = [];
         for(let i = 0; i < userChats.length; i++){
           const chatty = await formatChatInfo(userChats[i], user);
           formatedChats.push(chatty);
         }
-        console.log("READY TO SEND....");
         return {status: 200, data: formatedChats};
       }
     

@@ -1,6 +1,5 @@
 import express from "express";
 
-
 const error404Handler = (
   req: express.Request,
   res: express.Response,

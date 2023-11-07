@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToMany, ManyToMany, JoinTable, CreateDateColumn, BeforeInsert, BeforeUpdate } from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, CreateDateColumn} from "typeorm";
 import { User } from "./User.js";
 import { Chat } from "./Chat.js";
 import { Message } from "./Message.js";
@@ -29,23 +29,11 @@ export class UserChat extends BaseEntity {
     default: 'participant'})
     role: 'admin' | 'participant';
 
-    //  @OneToMany(() => Message, messages => messages.chat_id, {eager: true, nullable: true})
-    //  messages: Message[];
-
     @ManyToMany(() => Message, (message) => message.userChats, {eager: true})
     @JoinTable()
     messages: Message[];
 
     @CreateDateColumn({ type: 'timestamp'})
     lastEntry: Date;
-
-    // @BeforeUpdate()
-    // updateLastEntry() {
-    //     // Retrieve the last message date and update lastEntry
-    //     if (this.messages && this.messages.length > 0) {
-    //         const lastMessage = this.messages[this.messages.length - 1];
-    //         this.lastEntry = lastMessage.timeSent;
-    //     }
-    // }
 
 }

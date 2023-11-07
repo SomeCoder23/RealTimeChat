@@ -127,22 +127,21 @@ const login = async ( req: express.Request, res: express.Response, next: express
             expiresIn: "1h"
           }
         );
-        //change presences status of user.
-        //user.profile.status = "online";
-       // await user.save();
-      // console.log("SESSION:");
   
       res.cookie('username', user.username, {
+        maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
         sameSite: 'none',
         secure: true,
       });
       res.cookie('loginTime', Date.now(), {
+        maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
         sameSite: 'none',
         secure: true,
       });
       res.cookie('token', token, {
+        maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
         sameSite: 'none',
         secure: true,
@@ -191,8 +190,8 @@ const logout = async ( req: express.Request, res: express.Response, next: expres
   if(user){
   user.profile.status = "offline";
   user.save().then((response: any) => {
-    res.cookie('fullName', '', {
-      maxAge: -1,  // This means the cookie will be deleted
+    res.cookie('username', '', {
+      maxAge: -1,
       expires: new Date(Date.now() - 1000)
     });
     res.cookie('loginTime', '', {
@@ -218,9 +217,11 @@ const getContacts = async ( req: express.Request, res: express.Response, next: e
     {user: user}
   })
 
-  //NOTE: if no user has no contacts yet -> send appropraite message.
   if(contacts){
-    const people = await formatContacts(contacts, user);
+    if(contacts.length < 1)
+      res.status(200).json({success: true, data: "No contacts yet. So lonely..."});
+    
+      const people = await formatContacts(contacts, user);
     res.status(200).json({success: true, data: people});
   }
   else res.status(500).json({success: false, error: "Problem occurred"});
@@ -255,7 +256,6 @@ const getUsers = async ( req: any, res: express.Response, next: express.NextFunc
   }
 }
 
-//may need formating
 const searchUsers =  async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const query = req.params.query;
   let users;
@@ -284,7 +284,6 @@ const searchUsers =  async ( req: express.Request, res: express.Response, next: 
   }
 }
 
-
 const changeStatus = async (status: string, username: string) => {
   try { const user = await User.findOneBy({username});
   if(user){
@@ -309,7 +308,6 @@ const formatContacts = async (contacts: Contacts[], user: any) => {
   const userChats = await UserChat.find({where: {user: user}});
   const chats = userChats.map(userchat => userchat.chat.id);
   for(let i = 0; i < contacts.length; i++){
-     //let commonChats: any = await UserChat.find({where: {user: people[i], chat: In(chats)}})
      const userChats2 = await UserChat.find({where: {user: people[i]}});
      const chats2 = userChats2.map(userchat => userchat.chat.id);
      const chatIds = chats.filter(chat => chats2.includes(chat));

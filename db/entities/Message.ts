@@ -1,4 +1,4 @@
-import { BaseEntity, BeforeRemove, Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, BeforeRemove, Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User.js";
 import { Chat } from "./Chat.js";
 import { UserChat } from "./UserChat.js";
@@ -19,7 +19,7 @@ export class Message extends BaseEntity {
   })
   type: "text" | "file" | 'image';
 
-  @CreateDateColumn({ type: 'timestamp', /*default: () => 'CURRENT_TIMESTAMP',*/ nullable: false })
+  @CreateDateColumn({ type: 'timestamp', nullable: false })
   timeSent: Date;
 
   @ManyToOne(() => User, {eager: true, onDelete: 'SET NULL'})

@@ -1,6 +1,5 @@
 import "../dist/config.js";
 import express from "express";
-import { Request, Response } from 'express'; 
 import request from "supertest";
 import usersRouter from "../dist/routes/users.js";
 import dataSource from "../dist/db/dataSource.js";
@@ -9,7 +8,6 @@ import {
   getContactsTEST
 } from "../dist/controllers/user.js";
 import dotenv from "dotenv";
-import jwt from "jsonwebtoken";
 import { User } from "../dist/db/entities/User.js";
 import { getChatsTEST } from "../dist/controllers/chat.js";
 
@@ -17,8 +15,6 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use("/users", usersRouter);
-// app.use("/chat", authenticate, chatRouter);
-
 app.use(express.urlencoded({ extended: false }));
 
 beforeAll(async () => {
@@ -36,9 +32,7 @@ afterAll(async () => {
   await dataSource.dataSource.destroy();
 });
 
-
 const username = "TEST_USER";
-let token;
 
 describe("register process", () => {
   it("should register with valid credentials", async () => {
@@ -58,7 +52,6 @@ describe("register process", () => {
   });
 });
 
-
 describe("Login process", () => {
   it("should login with valid credentials", async () => {
     const user = {
@@ -74,10 +67,9 @@ describe("Login process", () => {
   });
 });
 
-
 describe("searchUsers process", () => {
   it("should search for users by username", async () => {
-    const query = "raghad"; // Replace with the query you want to search for
+    const query = "raghad"; 
     const response = await request(app).get(`/users/search/${query}`);
 
     expect(response.status).toBe(200);
@@ -85,7 +77,6 @@ describe("searchUsers process", () => {
     expect(Array.isArray(response.body.data)).toBe(true);
   });
 });
-
 
 describe("getChats process", () => {
   
@@ -117,7 +108,6 @@ describe("updateUserProfile process", () => {
   });
 
 });
-
 
 describe("getContacts process", () => {
   it("should retrieve user contacts", async () => {

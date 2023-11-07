@@ -9,7 +9,6 @@ import {
   getChats,
   addParticipant,
   removeParticipant,
-  deleteMessage,
   getHistory,
   searchMessages,
   searchChats,
@@ -50,9 +49,6 @@ router.post("/remove_participant", removeParticipant);
 router.post("/clear_chat/:chatId", clearChat);
 router.post("/search", searchMessages);
 router.post("/searchChats", searchChats);
-
-//router.post('/addContact/:username', addContact);
-//removes self permenantly from chat....
 router.post("/leave_chat/:chatId", leaveRoom);
 
 //GET ROUTES
@@ -67,7 +63,6 @@ router.get("/history/:chatId", getHistory);
 router.put("/changeStatus", changeChatStatus);
 
 //DELETE ROUTES
-router.delete("/delete_message/:messageId", deleteMessage);
-
+//router.delete("/delete_message/:messageId", deleteMessage);
 
 export default router;

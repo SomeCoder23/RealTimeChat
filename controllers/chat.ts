@@ -539,7 +539,12 @@ const searchChats =  async ( req: any, res: express.Response, next: express.Next
       pageSize: pageSize,
       total
     }
-    res.status(200).json({success: true, info: info, data: chats})
+    let formatedChats = [];
+      for(let i = 0; i < chats.length; i++){
+        const chatty = await formatChatInfo(chats[i], user);
+        formatedChats.push(chatty);
+      }
+    res.status(200).json({success: true, info: info, data: formatedChats})
   }
   else {
     res.status(500).json({success: false, error: "Problemo occurred."})

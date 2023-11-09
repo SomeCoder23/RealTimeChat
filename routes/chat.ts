@@ -46,8 +46,8 @@ router.post("/newChat/:username", createChat);
 router.post("/add_participant", addParticipant);
 router.post("/remove_participant", removeParticipant);
 router.post("/clear_chat/:chatId", clearChat);
-router.post("/search", searchMessages);
-router.post("/searchChats", searchChats);
+router.post("/searchMsgs", searchMessages);
+router.post("/search", searchChats);
 router.post("/leave_chat/:chatId", leaveRoom);
 
 //GET ROUTES

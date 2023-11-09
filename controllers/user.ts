@@ -7,80 +7,69 @@ import express from 'express';
 import { Contacts } from "../db/entities/Contacts.js";
 import "dotenv/config"
 import { ILike, In } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+
 import { UserChat } from '../db/entities/UserChat.js';
 import AWS from 'aws-sdk';
+import { sendEmail } from '../emailSESservice.js';
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_SES_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
-  region: process.env.AWS_SES_REGION
-});
-const ses = new AWS.SES({ region: 'eu-north-1' });
 
-const createUser = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+const createUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const username = req.body.username;
   const email = req.body.email;
-  const user = await User.findOneBy({username});
-  if(user){
-    res.status(400).json({success: false, error: "Username already in use."});
+  const user = await User.findOneBy({ username });
+
+  if (user) {
+    res.status(400).json({ success: false, error: "Username already in use." });
     return;
   }
 
-  db.dataSource.manager.transaction(async transaction => { 
-        try
-        {
-          const profile = Profile.create({
-            fullName: req.body.fullName,
-            birthday: req.body.birthday,
-            bio: req.body.bio,
-          });
-          
-          await transaction.save(profile);
-          console.log("Saved Profile!");
-          const hashedPassword = await bcrypt.hash(req.body.password, 10);
-          const currentDate = new Date();
-          const newUser = User.create({
-            username: username,
-            password: hashedPassword,
-            email: email,
-            createdAt: currentDate,
-            profile: profile
-          });
-    
-const token=''
-const verificationLink: string = `http://localhost:5000/verify?token=${token}`;
+  db.dataSource.manager.transaction(async (transaction) => {
+    try {
+      // First: Creates User Profile and Saves it
+      const profile = Profile.create({
+        fullName: req.body.fullName,
+        birthday: req.body.birthday,
+        bio: req.body.bio,
+      });
 
-const params: AWS.SES.SendEmailRequest = {
-  Destination: {
-    ToAddresses: [email]
-  },
-  Message: {
-    Body: {
-      Text: {
-        Data: `Click on the following link to verify your email: ${verificationLink}`
-      }
-    },
-    Subject: {
-      Data: 'Email Verification'
+      await transaction.save(profile);
+      console.log("Saved Profile!");
+
+      // Second: Hashes password, creates new user and saves it.
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      const currentDate = new Date();
+      const newUser = User.create({
+        username: username,
+        password: hashedPassword,
+        email: email,
+        createdAt: currentDate,
+        profile: profile,
+      });
+
+      await transaction.save(newUser);
+
+      // Email Verification
+      const verificationToken = uuidv4();
+      newUser.verificationToken = verificationToken;
+
+      const host = process.env.HOST || 'localhost:5000';
+      const verificationLink = 'http://' + host + '/user/verify-account?token=' + verificationToken;
+      const emailBody = "Dear User,\n\nThank you for registering. To complete your account setup, please verify your account by clicking the link below:\n" + verificationLink + "\n\nIf you didn't create this account, you can safely ignore this email.\n\nBest regards,\nYour Company Support Team";
+      const emailSubject = 'Email Verification';
+      sendEmail(email, emailBody, emailSubject);
+
+      res.status(201).json({ success: true, msg: "Successfully Registered! Please verify your email." });
+
+    } catch (error) {
+      console.log("###ERROR: ");
+      console.log(error);
+      res.status(500).json({ success: false, error: "Failed to register." });
     }
-  },
-  Source: 'realtimechatapp7@gmail.com'
+  });
 };
 
-// Send the email
-const sendPromise = ses.sendEmail(params).promise();
-await sendPromise;
-          await transaction.save(newUser);
-          res.status(201).json({success: true, msg: "Successfully Registered!", data: newUser});
-    
-        } catch(error){
-          console.log("###ERROR: ");
-          console.log(error);
-          res.status(500).json({success: false, error: "Failed to register."})
-        }
-       
-      });
-}
 
 const updateUserProfile = async ( req: express.Request, res: express.Response, next: express.NextFunction) => {
   const user = res.locals.user;

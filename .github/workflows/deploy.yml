@@ -34,7 +34,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/realtimechat:latest
+            ${{ secrets.DOCKER_USERNAME }}/realtimechat-1-app:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -76,7 +76,6 @@ jobs:
           docker compose -f docker-compose.yml up -d
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          GIT_VERSISON: ${{ needs.build.outputs.image_version }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_USER_NAME: ${{ secrets.DB_USER_NAME }}

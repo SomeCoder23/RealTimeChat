@@ -34,7 +34,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/raghaddrabee/realtimechat-1-app:latest
+            ${{ secrets.DOCKER_USERNAME }}/realtimechat-1-app:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

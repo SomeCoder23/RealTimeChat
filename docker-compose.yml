@@ -1,17 +1,5 @@
 version: '3'
 services:
-  # web:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   # environment:
-  #   #  - DB_PORT=3306
-  #   #  - DB_HOST= $DB_HOST
-  #   #  - DB_USER_NAME=admin
-  #   #  - DB_PASSWORD=$DB_PASSWORD
-    #  - DB_NAME=ChatApp     
-
-
   app:
     container_name: app-docker
     build: .
@@ -28,9 +16,6 @@ services:
       - AWS_SES_ACCESS_KEY= $AWS_SES_ACCESS_KEY
       - AWS_SES_SECRET_ACCESS_KEY= $AWS_SES_SECRET_ACCESS_KEY 
       - AWS_SES_REGION= $AWS_SES_REGION 
-
-
-
 
     ports:
       - "5000:80"

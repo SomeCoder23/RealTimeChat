@@ -1,19 +1,7 @@
 version: '3'
 services:
-  # web:
-  #   image:  ghcr.io/somecoder23/realtimechat:$GIT_VERSION
-  #   restart: always
-  #   environment:
-  #    - DB_PORT=3306
-  #    - DB_HOST= $DB_HOST
-  #    - DB_USER_NAME=admin
-  #    - DB_PASSWORD=$DB_PASSWORD
-  #    - DB_NAME=ChatApp
-  #   ports:
-  #     - "80:5000"
-
   app:
-    image: ghcr.io/somecoder23/realtimechat:latest
+    image: ghcr.io/somecoder23/realtimechat:$GIT_VERSION
     mem_limit: 5g
     restart: always 
     environment:

@@ -1,7 +1,7 @@
 version: '3'
 services:
   app:
-    container_name: app-docker
+    container_name: hopeful_shamir
     image: ghcr.io/somecoder23/realtimechat-1-app:latest
     environment:
       - PORT= 5000

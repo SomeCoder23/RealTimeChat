@@ -15,7 +15,7 @@ Explore a secure and dynamic real-time chat app that redefines communication. Ou
 - User Blocking and Muting.
 - Error Handling.
 - Unit Testing.
-- **Amazon SES (Simple Email Service)** -> We used it so that the user would submit a rating for the orderز
+- **Amazon SES (Simple Email Service)**
 - **Amazon RDS (Relational Database Service)** -> To manage relational databases for our models.
 - **Continuous Delivery** -> where every commit to the main branch must result in building a **Docker image** and automatically deployed to **AWS Auto-Scaling Group**. 
 
